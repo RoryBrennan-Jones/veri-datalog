@@ -9,11 +9,11 @@ def.cs: def.dfy
 bin/datalog.dll: datalog/datalog.csproj out/datalogParser.cs def.cs datalog/AstBuilder.cs datalog/Program.cs
 	dotnet build datalog/datalog.csproj --output bin
 
-examples/trace.out: examples/trace.pl
+examples/trace.out: examples/trace.pl examples/connectivity2.pl
 	swipl -l $< > $@
 
 .PHONY: check
-check: bin/datalog.dll examples/connectivity.pl examples/trace.out
+check: bin/datalog.dll examples/connectivity2.pl examples/trace.out
 	dotnet $^
 
 .PHONY: clean

@@ -18,12 +18,14 @@ namespace MiniC
       try {
         // Parse rule set.
         var rules_parser = BuildParser(args[0]);
+        rules_parser.ErrorHandler = new BailErrorStrategy();
         var rules_parse_tree = rules_parser.program();
         var rules_ast_builder = new AstBuilder();
         var rules = (Sequence<_module.Rule>)rules_ast_builder.VisitProgram(rules_parse_tree);
 
         // Parse trace.
         var trace_parser = BuildParser(args[1]);
+        trace_parser.ErrorHandler = new BailErrorStrategy();
         var trace_parse_tree = trace_parser.trace();
         var trace_ast_builder = new AstBuilder();
         var trace = (Sequence<_module.Event>)trace_ast_builder.VisitTrace(trace_parse_tree);

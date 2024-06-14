@@ -379,6 +379,10 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
     //      call is traced, once, if any rules might match.
     //      redo is also traced when the engine backtracks to find the next matching rule.
     var collect := trace[0];
+    ////////////////////////////////// debug
+    print collect;
+    print "\n \n";
+    //////////////////////////////////
     if collect.port != Call && collect.port != Redo {
       print "expected: call or redo\n";
       return Err;
@@ -417,6 +421,7 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
     var outcome := maybe_body.val.0;
     trace := maybe_body.val.1;
     if outcome.Failure? {
+      print "Failure happened\n"; // debug
       continue;
     }
 
@@ -530,6 +535,13 @@ method reconstruct(node : TraceNode, g : Prop, rs : RuleSet) returns (res : Resu
       return Err;
     }
   }
+
+  /////////////////////////////////////////// debug
+  print s;
+  print "\n";
+  print goal_subst;
+  print "\n============================\n";
+  ///////////////////////////////////////////
 
   var maybe_merged := merge_subst(s, goal_subst);
   match maybe_merged {
