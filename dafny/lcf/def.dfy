@@ -371,6 +371,12 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
 
   var nodes: seq<TraceNode> := [];
   var trace := trace;
+  ////
+  var position := 0;
+  var isChoice := false;
+  var choicepointIndices: seq<nat> := [];
+  ////
+  // if |trace| > 0 { print trace[0].level; } else { print "not sure what happened here"; } print "\n"; ////debug
   while |trace| > 0 && trace[0].level >= min_level
     invariant forall i :: 0 <= i < |nodes| ==> nodes[i].wf()
     decreases |trace|
@@ -379,14 +385,27 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
     //      call is traced, once, if any rules might match.
     //      redo is also traced when the engine backtracks to find the next matching rule.
     var collect := trace[0];
-    ////////////////////////////////// debug
-    print collect;
-    print "\n \n";
-    //////////////////////////////////
+    // print collect; print "\n"; //// debug main
     if collect.port != Call && collect.port != Redo {
       print "expected: call or redo\n";
       return Err;
     }
+    ////
+    if collect.port == Call {
+      match collect.prop
+      case App(_, args) => {
+        for i := 0 to |args| {
+          match args[i]
+          case Var(_) => {isChoice := true;}
+          case _ =>
+        }
+      }
+      case _ => {
+        print "expected: App\n";
+        return Err;
+      }
+    }
+    ////
     var level := collect.level;
     trace := trace[1..];
 
@@ -398,6 +417,7 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
       return Err;
     }
     var unify := trace[0];
+    // print unify; print "\n"; //// debug main
     trace := trace[1..];
     if unify.level != level {
       print "level mismatch\n";
@@ -413,6 +433,7 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
 
     // 3. Applies variable assignments from unification to clauses in the rule
     //    body and continues at #1 with the updated clauses.
+    // print "Recursing to level "; print level+1; print "\n"; ////debug
     var maybe_body := build_trace_tree(trace, level+1, bound-1);
     if maybe_body.Err? {
       print "recursion error\n";
@@ -421,8 +442,50 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
     var outcome := maybe_body.val.0;
     trace := maybe_body.val.1;
     if outcome.Failure? {
-      print "Failure happened\n"; // debug
-      continue;
+      // print "Failure happened\n"; //// debug
+      // continue;
+      ///////////////
+      if |trace| > 0 {
+        var lookahead := trace[0];
+        if lookahead.port != Fail {
+          continue;
+        } else {
+          // print nodes; print "\n";
+          trace := trace[1..];
+          if |trace| > 0 {
+              var lookahead2 := trace[0];
+              if lookahead2.level < lookahead.level {
+                return Ok((Failure, trace));
+              } else if lookahead2.port == Redo { // so if the second lookahead is a redo, which indicates a unification failure across multiple goals
+                // maybe check if this is a redo, and then do a clean of nodes to get rid of any remnants of the unification failure
+                // read redo, get rule and figure out where it is in goal body, delete anything up to that point in nodes
+                // print "====================================================\n";
+                if |choicepointIndices| > 0 {
+                  var position := choicepointIndices[|choicepointIndices|-1];
+                  // print choicepoint; print "\n";
+                  choicepointIndices := choicepointIndices[0..|choicepointIndices|-1];
+                  assume{:axiom}(position < |nodes|);
+                  if position == 0 {
+                    nodes := []; 
+                  } else {
+                    nodes := nodes[..position];
+                  }
+                  // print nodes; print "\n";
+                }
+                ////
+                continue;
+              } else {
+                print "Expected redo\n";
+                return Err;
+              }
+          } else {
+            return Ok((Failure, trace));
+          }
+        }
+      } else {
+        return Ok((Failure, trace));
+      }
+      ///////////////
     }
 
     // 4. After all of the body clauses of the matched rule have either succeeded, failed, or thrown an exception:
@@ -439,14 +502,21 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
       print "non concrete exit\n";
       return Err;
     }
-
+    // print exit; print "\n"; //// debug main
     match exit.port {
       case Exit => {
         var node := TraceNode(unify.i, exit.prop, outcome.nodes);
         nodes := nodes + [node];
+        ////
+        if isChoice {
+          choicepointIndices := choicepointIndices + [position];
+        }
+        position := position + 1;
+        ////
         continue;
       }
       case Fail => {
+        // print "Did not succeed\n"; //// debug
         return Ok((Failure, trace));
       }
       case _ => {
@@ -477,6 +547,14 @@ method reconstruct(node : TraceNode, g : Prop, rs : RuleSet) returns (res : Resu
   requires node.wf()
   ensures res.Ok? ==> res.val.thm.wf(rs)
 {
+  /////////////////////////////////////////// debug
+  // print "===\n";
+  // print g;
+  // print "\n";
+  // print node.prop;
+  // print "\n";
+  ///////////////////////////////////////////
+
   // Which rule are we applying.
   var ri: nat;
   var maybe_ri := lookup_rule(rs, node.i);
@@ -488,6 +566,11 @@ method reconstruct(node : TraceNode, g : Prop, rs : RuleSet) returns (res : Resu
     }
   }
   var r := rs[ri];
+
+  ///////////// debug
+  // print r;
+  // print "\n";
+  /////////////
 
   // Reconstruct the rule body.
   if |node.children| != |r.body| {
@@ -537,13 +620,76 @@ method reconstruct(node : TraceNode, g : Prop, rs : RuleSet) returns (res : Resu
   }
 
   /////////////////////////////////////////// debug
-  print s;
-  print "\n";
-  print goal_subst;
-  print "\n============================\n";
+  // print "[[[[[[[[[[[[[[[[[[[[[[[[[[[[\n";
+  // print "r: ";
+  // print r; //.head.args;
+  // print "\n";
+  // print "g: ";
+  // print g; //.args;
+  // print "\n";
+  // print "node.prop: ";
+  // print node.prop;
+  // print "\n";
+  // print "s: ";
+  // print s;
+  // print "\n";
+  // print "goal_subst: ";
+  // print goal_subst;
+  // print "\n";
   ///////////////////////////////////////////
 
-  var maybe_merged := merge_subst(s, goal_subst);
+  //////////////
+  var rename_map : map<string, string> := map[];
+  // assume {:axiom}(|r.head.args| == |g.args|); // todo: replace assume with assert and find a proof
+  if |r.head.args| != |g.args| {
+    print "failed to rename\n";
+    return Err;
+  }
+  for i := 0 to |r.head.args| {
+    var term1 := r.head.args[i];
+    var term2 := g.args[i];
+    var var1 := match term1
+    case Var(v) => v 
+    case Const(_) => "";
+    var var2 := match term2
+    case Var(v) => v 
+    case Const(_) => "";
+    if var1 == "" && var2 == "" {
+    } else if var2 == "" {
+      rename_map := rename_map[var1 := var1];
+    } else if var1 == "" {
+      rename_map := rename_map[var2 := var2];
+    } else {
+      rename_map := rename_map[var2 := var1];
+    }
+  }
+  // print "rename_map: ";
+  // print rename_map;
+  // print "\n";
+  var renamed_goal_subst : Subst := map[];
+  var ss := rename_map.Keys;
+  while ss != {}
+    decreases |ss|
+  {
+    var old_var: string :| old_var in ss;
+    assert(old_var in ss);
+    // assert ss is a subset of rename_map.Keys
+    assume{:axiom}(old_var in rename_map.Keys); // todo: replace assume with assert and find a proof
+    ss := ss - {old_var};
+    var new_var := rename_map[old_var];
+    // assume{:axiom}(old_var in goal_subst.Keys); // todo: replace assume with assert and find a proof
+    if old_var in goal_subst.Keys {
+      var val := goal_subst[old_var];
+      renamed_goal_subst := renamed_goal_subst[new_var := val];
+    }
+  }
+  // print "renamed_goal_subst: ";
+  // print renamed_goal_subst;
+  // print "\n";
+  // todo (somewhere): trim s
+  //////////////
+
+  var maybe_merged := merge_subst(s, renamed_goal_subst); // originally with goal_subst
   match maybe_merged {
     case Ok(merged) => s := merged;
     case Err => {
@@ -551,6 +697,12 @@ method reconstruct(node : TraceNode, g : Prop, rs : RuleSet) returns (res : Resu
       return Err;
     }
   }
+
+  /////////////////////// debug
+  // print "merged: ";
+  // print s;
+  // print "\n]]]]]]]]]]]]]]]]]]]]]]]]]]]]\n";
+  ///////////////////////
 
   // Deduce theorem.
   var maybe_thm := mk_thm(rs, ri, s, args);
