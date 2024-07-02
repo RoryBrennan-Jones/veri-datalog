@@ -299,7 +299,7 @@ function tst_reverse_thm() : Result<Thm> {
 
 datatype Port = Call | Unify | Redo | Exit | Fail
 
-datatype Event = Event(port : Port, level : nat, prop : Prop, i : nat)
+datatype Event = Event(port : Port, level : nat, prop : Prop, i : nat, choice: Prop)
 
 type Trace = seq<Event>
 
@@ -372,9 +372,12 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
   var nodes: seq<TraceNode> := [];
   var trace := trace;
   ////
-  var position := 0;
-  var isChoice := false;
-  var choicepointIndices: seq<nat> := [];
+  // var position := 0;
+  // var isChoice := false;
+  // var choicepointIndices: seq<nat> := [];
+  var breadcrumbs: seq<Event> := [];
+  var breadcrumbSingleton: seq<Event> := [];
+  var breadcrumbFound := false;
   ////
   // if |trace| > 0 { print trace[0].level; } else { print "not sure what happened here"; } print "\n"; ////debug
   while |trace| > 0 && trace[0].level >= min_level
@@ -392,18 +395,20 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
     }
     ////
     if collect.port == Call {
-      match collect.prop
-      case App(_, args) => {
-        for i := 0 to |args| {
-          match args[i]
-          case Var(_) => {isChoice := true;}
-          case _ =>
-        }
-      }
-      case _ => {
-        print "expected: App\n";
-        return Err;
-      }
+      breadcrumbSingleton := [collect];
+      breadcrumbFound := true;
+    //   match collect.prop
+    //   case App(_, args) => {
+    //     for i := 0 to |args| {
+    //       match args[i]
+    //       case Var(_) => {isChoice := true;}
+    //       case _ =>
+    //     }
+    //   }
+    //   case _ => {
+    //     print "expected: App\n";
+    //     return Err;
+    //   }
     }
     ////
     var level := collect.level;
@@ -460,19 +465,42 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
                 // maybe check if this is a redo, and then do a clean of nodes to get rid of any remnants of the unification failure
                 // read redo, get rule and figure out where it is in goal body, delete anything up to that point in nodes
                 // print "====================================================\n";
-                if |choicepointIndices| > 0 {
-                  var position := choicepointIndices[|choicepointIndices|-1];
-                  // print choicepoint; print "\n";
-                  choicepointIndices := choicepointIndices[0..|choicepointIndices|-1];
-                  assume{:axiom}(position < |nodes|);
-                  if position == 0 {
-                    nodes := []; 
-                  } else {
-                    nodes := nodes[..position];
-                  }
-                  // print nodes; print "\n";
-                }
+                // if |choicepointIndices| > 0 {
+                //   var position := choicepointIndices[|choicepointIndices|-1];
+                //   // print choicepoint; print "\n";
+                //   choicepointIndices := choicepointIndices[0..|choicepointIndices|-1];
+                //   assume{:axiom}(position < |nodes|);
+                //   if position == 0 {
+                //     nodes := []; 
+                //   } else {
+                //     nodes := nodes[..position];
+                //   }
+                //   // print nodes; print "\n";
+                // }
                 ////
+                var choice := lookahead2.choice;
+                var cutoff := -2;
+                for i := 0 to |breadcrumbs| {
+                  print choice;
+                  // print " VS ";
+                  // print breadcrumbs[i].prop;
+                  // print "\n";
+                  // print "==================\n";
+                  if breadcrumbs[i].prop == choice {
+                      cutoff := i-1;
+                  }
+                }
+                if cutoff == -2 {
+                  print "Expected choicepoint to be found in nodes\n";
+                  // continue;
+                  return Err;
+                } else if cutoff == -1 {
+                  nodes := [];
+                } else {
+                  assume{:axiom}(cutoff < |nodes|);
+                  nodes := nodes[..cutoff];
+                }
+
                 continue;
               } else {
                 print "Expected redo\n";
@@ -508,10 +536,13 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
         var node := TraceNode(unify.i, exit.prop, outcome.nodes);
         nodes := nodes + [node];
         ////
-        if isChoice {
-          choicepointIndices := choicepointIndices + [position];
+        // if isChoice {
+        //   choicepointIndices := choicepointIndices + [position];
+        // }
+        // position := position + 1;
+        if breadcrumbFound {
+          breadcrumbs := breadcrumbs + breadcrumbSingleton;
         }
-        position := position + 1;
         ////
         continue;
       }
@@ -862,7 +893,7 @@ function connectivity_rules() : RuleSet {
     /*7*/mk_fact("destination", ["n3"], 7)
   ]
 }
-
+/*
 function connectivity_trace() : (trace : Trace)
   ensures |trace| > 0
 {
@@ -924,7 +955,7 @@ method run_connectivity_example() {
   var rs := connectivity_rules();
   var trace := connectivity_trace();
   run(rs, trace);
-}
+}*/
 
 method run(rs : RuleSet, trace : Trace) {
   // Dump rules.

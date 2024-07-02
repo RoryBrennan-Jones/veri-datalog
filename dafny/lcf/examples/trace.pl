@@ -5,7 +5,7 @@ port_name(redo(_),   'redo').
 port_name(unify,     'unify').
 port_name(exception, 'exception').
 
-prolog_trace_interception(Port, Frame, _Choice, continue) :-
+prolog_trace_interception(Port, Frame, Choice, continue) :- % _Choice
     port_name(Port, PortName),
     write(PortName),
 
@@ -27,10 +27,34 @@ prolog_trace_interception(Port, Frame, _Choice, continue) :-
     write("\t"),
     write(Goal),
 
+    %%%
+    % prolog_frame_attribute(Frame, has_alternatives, Has_alternatives),
+    % write("\t"),
+    % write(Has_alternatives),
+    % write("\t[["),
+    % Has_alternatives,
+    % prolog_frame_attribute(Frame, alternative, Alternative),
+    % write(Alternative),
+    % write("]]"),
+
+    % prolog_choice_attribute(Choice, type, ChoiceType),
+    % deterministic(D1),
+    write("\t"),
+    (
+        \+ prolog_frame_attribute(Frame, parent, _Parent)
+        ->
+            prolog_choice_attribute(Choice, frame, ChoiceFrame),
+            prolog_frame_attribute(ChoiceFrame, goal, ChoiceGoal),
+            write(ChoiceGoal)
+        ;
+            write(Goal)
+    ),
+    %%%
+
     writeln(";").
 
 :- visible(+all).
 :- leash(-all).
 :- include(connectivity2).
-:- trace, query(kati, noe), notrace. % query(n0, n3)
+:- trace, query(n0, m3), notrace. % query(n0, n3)
 :- halt.

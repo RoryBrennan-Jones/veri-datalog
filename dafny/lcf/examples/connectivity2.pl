@@ -1,51 +1,22 @@
-person(adria).
-person(barrett).
-person(carson).
-person(deidra).
-person(eldon).
-person(fern).
-person(gonzalo).
-person(harley).
-person(ignacia).
-person(kati).
-person(lauretta).
-person(mayra).
-person(noe).
-person(odell).
-person(reanna).
-person(sona).
-person(terra).
-person(ursula).
-person(virgilio).
-
-parentof(adria, carson).
-parentof(barrett, carson).
-parentof(adria, deidra).
-parentof(barrett, deidra).
-parentof(deidra, eldon).
-parentof(deidra, fern).
-parentof(carson, gonzalo).
-parentof(carson, harley).
-
-parentof(ignacia, lauretta).
-parentof(kati, lauretta).
-parentof(lauretta, mayra).
-parentof(mayra, noe).
-parentof(mayra, odell).
-parentof(noe, reanna).
-parentof(noe, sona).
-parentof(odell, terra).
-parentof(odell, ursula).
-parentof(ursula, virgilio).
-
-siblings(X, Y) :-
-    person(X),
-    person(Y),
-    parentof(Parent, X),
-    parentof(Parent, Y).
-
-ancestor(Parent, Child) :- parentof(Parent, Child).
-ancestor(Ancestor, Descendant) :- parentof(Ancestor, Intermediate), ancestor(Intermediate, Descendant).
-
-query(X, Y) :-
-    ancestor(X, Y).
+node(n0).
+node(n1).
+node(n2).
+node(n3).
+node(m0).
+node(m1).
+node(m2).
+node(m3).
+node(n4).
+edge(n3,n4).
+edge(n1, n3).
+edge(n1, n2).
+edge(n0, n1).
+edge(n1, m0).
+edge(m0, m1).
+edge(m1, m2).
+edge(m2, m3).
+source(n0).
+destination(m3).
+connected(A, B) :- edge(A, B).
+connected(A, B) :- edge(A, M), connected(M, B).
+query(S, D) :- source(S), destination(D), connected(S, D).
