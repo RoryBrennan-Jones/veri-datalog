@@ -49,6 +49,21 @@ prolog_trace_interception(Port, Frame, Choice, continue) :- % _Choice
         ;
             write(Goal)
     ),
+
+    %write("\t"),
+    %(
+    %    prolog_frame_attribute(Frame, clause, ClauseRef)
+    %    ->
+    %        clause_property(ClauseRef, line_count(LineCount)),
+    %        write(LineCount),
+    %        write(" "),
+    %        nth_clause(Pred, Index, ClauseRef),
+    %        write(Pred),
+    %        write(" "),
+    %        write(Index)
+    %    ;
+    %        write(0)
+    %),
     %%%
 
     writeln(";").
@@ -56,5 +71,5 @@ prolog_trace_interception(Port, Frame, Choice, continue) :- % _Choice
 :- visible(+all).
 :- leash(-all).
 :- include(connectivity2).
-:- trace, query(n0, m3), notrace. % query(n0, n3)
+:- trace, query(n0,m3), notrace. % query(n0, n3)
 :- halt.

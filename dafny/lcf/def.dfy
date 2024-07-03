@@ -388,7 +388,7 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
     //      call is traced, once, if any rules might match.
     //      redo is also traced when the engine backtracks to find the next matching rule.
     var collect := trace[0];
-    // print collect; print "\n"; //// debug main
+    print collect; print "\n\n"; //// debug main
     if collect.port != Call && collect.port != Redo {
       print "expected: call or redo\n";
       return Err;
@@ -422,13 +422,14 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
       return Err;
     }
     var unify := trace[0];
-    // print unify; print "\n"; //// debug main
+    print unify; print "\n\n"; //// debug main
     trace := trace[1..];
     if unify.level != level {
       print "level mismatch\n";
       return Err;
     }
     if unify.port == Fail {
+      print "Failure type #1\n"; // debug
       return Ok((Failure, trace));
     }
     if unify.port != Unify {
@@ -460,6 +461,7 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
           if |trace| > 0 {
               var lookahead2 := trace[0];
               if lookahead2.level < lookahead.level {
+                print "Failure type #2\n"; // debug
                 return Ok((Failure, trace));
               } else if lookahead2.port == Redo { // so if the second lookahead is a redo, which indicates a unification failure across multiple goals
                 // maybe check if this is a redo, and then do a clean of nodes to get rid of any remnants of the unification failure
@@ -507,10 +509,12 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
                 return Err;
               }
           } else {
+            print "Failure type #3\n"; // debug
             return Ok((Failure, trace));
           }
         }
       } else {
+        print "Failure type #4\n"; // debug
         return Ok((Failure, trace));
       }
       ///////////////
@@ -530,7 +534,7 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
       print "non concrete exit\n";
       return Err;
     }
-    // print exit; print "\n"; //// debug main
+    print exit; print "\n\n"; //// debug main
     match exit.port {
       case Exit => {
         var node := TraceNode(unify.i, exit.prop, outcome.nodes);
@@ -548,6 +552,7 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
       }
       case Fail => {
         // print "Did not succeed\n"; //// debug
+        print "Failure type #5\n"; // debug
         return Ok((Failure, trace));
       }
       case _ => {
