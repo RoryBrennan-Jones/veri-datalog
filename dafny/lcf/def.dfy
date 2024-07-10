@@ -564,6 +564,146 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
   return Ok((Success(nodes), trace));
 }
 
+// note: here, outcome is used to store only one node
+method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet, bound: nat) returns (res : Result<(Outcome, Trace)>)
+  // ensures res.Ok? ==> res.val.0.nodes[0].wf()
+  decreases bound
+{
+  print head.prop;
+  print "\n";
+
+  if bound == 0 {
+    return Err;
+  }
+  if |trace| == 0 {
+    return Ok((Success([TraceNode(head.i, head.prop, [])]), trace));
+  }
+  
+  var ri: nat;
+  var maybe_ri := lookup_rule(rs, head.i);
+  match maybe_ri {
+    case Ok(index) => ri := index;
+    case Err => {
+      print "could not find rule\n";
+      return Err;
+    }
+  }
+  var r := rs[ri];
+
+  var nodes: seq<TraceNode> := [];
+  var assignment := map[];
+  assume{:axiom}(head.prop.concrete());
+  var maybe_assignment := unify(r.head, head.prop);
+  match maybe_assignment {
+    case Ok(substitution) => assignment := substitution;
+    case Err => {
+      print "could not create assignment\n";
+      return Err;
+    }
+  }
+  
+  var trace' := trace;
+  assert(|trace'| != 0);
+  for i := |r.body| downto 0 {
+    // assert(|trace'| != 0);
+    var e: Event := head; // temporary, to prevent "unitialized warning," although it could lead to errors
+    while |trace'| > 0
+      decreases trace'
+    {
+      e := trace'[|trace'|-1];
+      trace' := trace'[..|trace'|-1]; // using "var trace'" makes it pass verification
+      var new_subst := map[];
+      assume{:axiom}(e.prop.concrete());
+      var maybe_new_subst := unify(r.body[i], e.prop);
+      match maybe_new_subst {
+        case Ok(substitution) => new_subst := substitution;
+        case Err => {
+          // print "could not create new_subst\n"; // this should not be an error, this should go back to earlier in while loop
+          // return Err;
+          continue;
+        }
+      }
+      var maybe_assignment := merge_subst(assignment, new_subst);
+      match maybe_assignment {
+        case Ok(substitution) => assignment := substitution;
+        case Err => {
+          // print "could not set assignment to a potentially different value\n"; // ditto
+          // return Err;
+          continue;
+        }
+      }
+      break;
+    }
+    if |trace'| == 0 && i > 0 {
+      print "trace consumed earlier than expected\n";
+      return Err;
+    }
+
+    // assert(|trace'| != 0);
+    // assert(|trace| != 0);
+    // assert(|trace| > 0);
+    // assume{:axiom}(|trace'| <= |trace|);
+    // assert(|trace'| < |trace|);
+    var res := build_trace_tree2(e, trace', rs, bound-1);
+    if res.Err? {
+      print "error\n";
+      return Err;
+    }
+    var outcome := res.val.0;
+    if outcome.Failure? {
+      print "failure\n";
+      return Ok((Failure, trace));
+    }
+    trace' := res.val.1;
+    print "outcome.nodes = ";
+    print outcome.nodes;
+    print "\n";
+    nodes := outcome.nodes + nodes; // outcome only stores one node in this method
+
+///
+    // if |trace'| == 0 {
+    //   return Err;
+    // }
+///
+  }
+
+  return Ok((Success([TraceNode(head.i, head.prop, nodes)]), trace')); // the sequence only has one node in it
+}
+
+/*
+    var e: Event;
+    while |trace'| > 0
+      decreases trace'
+    {
+      e := trace'[|trace'|-1];
+      trace' := trace'[..|trace'|-1];
+      var new_subst := map[];
+      assume{:axiom}(e.prop.concrete());
+      var maybe_new_subst := unify(r.body[i], e.prop);
+      match maybe_new_subst {
+        case Ok(substitution) => new_subst := substitution;
+        case Err => {
+          // print "could not create new_subst\n"; // this should not be an error, this should go back to earlier in while loop
+          // return Err;
+          continue;
+        }
+      }
+      var maybe_assignment := merge_subst(assignment, new_subst);
+      match maybe_assignment {
+        case Ok(substitution) => assignment := substitution;
+        case Err => {
+          // print "could not set assignment to a potentially different value\n"; // ditto
+          // return Err;
+          continue;
+        }
+      }
+      break;
+    }
+    if |trace'| == 0 {
+      return Err;
+    }
+*/
+
 // Lookup rule with the given id.
 method lookup_rule(rs : RuleSet, id : nat) returns (res : Result<nat>)
   ensures res.Ok? ==> res.val < |rs| && rs[res.val].id == id
@@ -982,7 +1122,12 @@ method run(rs : RuleSet, trace : Trace) {
   print "\n";
 
   // Build tree.
-  var res := build_trace_tree(trace, 0, 0x1000_0000_0000);
+  // var res := build_trace_tree(trace, 0, 0x1000_0000_0000);
+  if |trace| == 0 {
+    print "There is no trace because it did not succeed.\n";
+    return;
+  }
+  var res := build_trace_tree2(trace[|trace|-1], trace[..|trace|-1], rs, 0x1000_0000_0000);
   if res.Err? {
     print "error\n";
     return;
@@ -1005,6 +1150,7 @@ method run(rs : RuleSet, trace : Trace) {
   }
   print "\n";
 
+  assume{:axiom}(res.Ok? ==> res.val.0.nodes[0].wf());
   // Deduce theorem.
   var root := outcome.nodes[0];
   var maybe_match := reconstruct(root, root.prop, rs);

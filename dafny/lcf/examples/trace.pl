@@ -7,6 +7,7 @@ port_name(exception, 'exception').
 
 prolog_trace_interception(Port, Frame, Choice, continue) :- % _Choice
     port_name(Port, PortName),
+    ( PortName == exit ->
     write(PortName),
 
     prolog_frame_attribute(Frame, level, Level),
@@ -51,6 +52,24 @@ prolog_trace_interception(Port, Frame, Choice, continue) :- % _Choice
     ),
 
     %write("\t"),
+    %write(Frame),
+    %write("\t"),
+    %prolog_choice_attribute(Choice, frame, ChoiceFrame),
+    %write(ChoiceFrame),
+
+    %write("\t"),
+    %prolog_frame_attribute(Frame, has_alternatives, Has_alternatives),
+    %(
+    %    Has_alternatives
+    %    ->
+    %        prolog_frame_attribute(Frame, alternative, Alternative),
+    %        prolog_frame_attribute(Alternative, goal, AltGoal),
+    %        write(AltGoal)
+    %    ;
+    %        write(0)
+    %),
+
+    %write("\t"),
     %(
     %    prolog_frame_attribute(Frame, clause, ClauseRef)
     %    ->
@@ -66,7 +85,10 @@ prolog_trace_interception(Port, Frame, Choice, continue) :- % _Choice
     %),
     %%%
 
-    writeln(";").
+    writeln(";") %.
+    ;
+    write("")
+    ).
 
 :- visible(+all).
 :- leash(-all).
