@@ -565,20 +565,30 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
 }
 
 // note: here, outcome is used to store only one node
-method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet, bound: nat) returns (res : Result<(Outcome, Trace)>)
-  // ensures res.Ok? ==> res.val.0.nodes[0].wf()
-  decreases bound
+method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : Result<(Outcome, Trace)>) //, bound: nat
+  // requires head.prop.concrete()
+  // requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
+  // ensures res.Ok? && res.val.0.Success? ==> |res.val.0.nodes| == 1
+  // ensures res.Ok? && res.val.0.Success? ==> res.val.0.nodes[0].wf()
+  // decreases bound
+  decreases |trace|
+  ensures res.Ok? ==> |res.val.1| <= |trace|
 {
-  print head.prop;
-  print "\n";
+  // print head.prop;
+  // print "\n";
 
-  if bound == 0 {
-    return Err;
-  }
+  // if bound == 0 {
+  //   return Err;
+  // }
   if |trace| == 0 {
-    return Ok((Success([TraceNode(head.i, head.prop, [])]), trace));
+    return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
   }
   
+  // Here, the code makes the incorrect assumption that this is a rule (App), instead of a builtin or equality.
+  // If it were a builtin or equality, then what would the line number be in the trace? What do builtins and equalities look like in the trace?
+  // Answer: if it were a builtin or equality, head.i equals 0.
+  // If it were a builtin or equality, that would be a terminal point (leaf), so there woud be no need to iterate through children (there are none).
+  // So it could just return after figuring it out.
   var ri: nat;
   var maybe_ri := lookup_rule(rs, head.i);
   match maybe_ri {
@@ -593,6 +603,7 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet, bound: nat) ret
   var nodes: seq<TraceNode> := [];
   var assignment := map[];
   assume{:axiom}(head.prop.concrete());
+  // assert(head.prop.concrete());
   var maybe_assignment := unify(r.head, head.prop);
   match maybe_assignment {
     case Ok(substitution) => assignment := substitution;
@@ -603,17 +614,36 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet, bound: nat) ret
   }
   
   var trace' := trace;
-  assert(|trace'| != 0);
-  for i := |r.body| downto 0 {
+  // assert(|trace'| == |trace|);
+  // assert(|trace'| != 0);
+  // var y := |trace|;
+  for i := |r.body| downto 0
+    // invariant y <= |trace|
+    invariant |trace'| <= |trace|
+  {
     // assert(|trace'| != 0);
-    var e: Event := head; // temporary, to prevent "unitialized warning," although it could lead to errors
+    var e: Event := head; // temporary assignment to prevent Dafny from giving an "unintialized warning," although not ideal
+    // var x := |trace'|;
+    // if i == |r.body| {
+    //   assert(|trace'| <= |trace|);
+    // }
     while |trace'| > 0
-      decreases trace'
+      invariant |trace'| <= |trace|
+      // invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
+      // invariant y <= |trace|
+      decreases |trace'|
+      // decreases y
     {
+      // y := y - 1;
       e := trace'[|trace'|-1];
       trace' := trace'[..|trace'|-1]; // using "var trace'" makes it pass verification
       var new_subst := map[];
+      // assert(e.prop.concrete());
       assume{:axiom}(e.prop.concrete());
+      // assert(forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete());
+      // assert(forall j :: 0 <= j < |trace'| ==> trace'[j] in trace);
+      // assert(forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete());
+      // assert(e.prop.concrete());
       var maybe_new_subst := unify(r.body[i], e.prop);
       match maybe_new_subst {
         case Ok(substitution) => new_subst := substitution;
@@ -634,6 +664,10 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet, bound: nat) ret
       }
       break;
     }
+    // if i == |r.body| {
+    //   assert(|trace'| <= |trace|);
+    // }
+    // assert(|trace'| <= x);
     if |trace'| == 0 && i > 0 {
       print "trace consumed earlier than expected\n";
       return Err;
@@ -643,21 +677,32 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet, bound: nat) ret
     // assert(|trace| != 0);
     // assert(|trace| > 0);
     // assume{:axiom}(|trace'| <= |trace|);
-    // assert(|trace'| < |trace|);
-    var res := build_trace_tree2(e, trace', rs, bound-1);
+    // assert(|trace'| <= |trace|);
+    // assert(|trace'| <= |trace|);
+    // assert(e.prop.concrete());
+    // assert(forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete());
+    var res := build_trace_tree2(e, trace', rs); // , bound-1
     if res.Err? {
       print "error\n";
       return Err;
     }
     var outcome := res.val.0;
+    // assert(|trace'| <= x);
     if outcome.Failure? {
       print "failure\n";
       return Ok((Failure, trace));
     }
+    // if i == |r.body| {
+    //   assert(|res.val.1| <= |trace'|);
+    // }
     trace' := res.val.1;
-    print "outcome.nodes = ";
-    print outcome.nodes;
-    print "\n";
+    // if i == |r.body| {
+    //   assert(|trace'| <= x);
+    //   assert(|trace'| <= |trace|);
+    // }
+    // print "outcome.nodes = ";
+    // print outcome.nodes;
+    // print "\n";
     nodes := outcome.nodes + nodes; // outcome only stores one node in this method
 
 ///
@@ -666,7 +711,10 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet, bound: nat) ret
     // }
 ///
   }
-
+  print head.prop;
+  print "\n\n";
+  print assignment;
+  print "\n\n";
   return Ok((Success([TraceNode(head.i, head.prop, nodes)]), trace')); // the sequence only has one node in it
 }
 
@@ -1127,7 +1175,7 @@ method run(rs : RuleSet, trace : Trace) {
     print "There is no trace because it did not succeed.\n";
     return;
   }
-  var res := build_trace_tree2(trace[|trace|-1], trace[..|trace|-1], rs, 0x1000_0000_0000);
+  var res := build_trace_tree2(trace[|trace|-1], trace[..|trace|-1], rs); //, 0x1000_0000_0000
   if res.Err? {
     print "error\n";
     return;
