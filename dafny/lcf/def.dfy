@@ -565,117 +565,7 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
 }
 
 // note: here, outcome is used to store only one node
-method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : Result<(Outcome, Trace)>)
-  requires head.prop.concrete()
-  requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
-  ensures res.Ok? ==> forall j :: 0 <= j < |res.val.1| ==> res.val.1[j].prop.concrete()
-  ensures res.Ok? ==> |res.val.1| <= |trace|
-  ensures res.Ok? && res.val.0.Success? ==> |res.val.0.nodes| == 1
-  ensures res.Ok? && res.val.0.Success? ==> res.val.0.nodes[0].wf()
-  decreases |trace|
-{
-  // print head.prop;
-  // print "\n";
-
-  if |trace| == 0 {
-    return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
-  }
-  
-  // Notes to self:
-  // Here, the code makes the incorrect assumption that this is a rule (App), instead of a builtin or equality.
-  // If it were a builtin or equality, then what would the line number be in the trace? What do builtins and equalities look like in the trace?
-  // Answer: if it were a builtin or equality, head.i equals 0.
-  // If it were a builtin or equality, that would be a terminal point (leaf), so there woud be no need to iterate through children (there are none).
-  // So it could just return after figuring it out.
-  // Additionally, it should be noted that facts (rules without children) are currently handled because the for loop is automatically skipped.
-  var ri: nat;
-  var maybe_ri := lookup_rule(rs, head.i);
-  match maybe_ri {
-    case Ok(index) => ri := index;
-    case Err => {
-      print "could not find rule\n";
-      return Err;
-    }
-  }
-  var r := rs[ri];
-
-  var nodes: seq<TraceNode> := [];
-  var assignment := map[];
-  var maybe_assignment := unify(r.head, head.prop);
-  match maybe_assignment {
-    case Ok(substitution) => assignment := substitution;
-    case Err => {
-      print "could not create assignment\n";
-      return Err;
-    }
-  }
-  
-  var trace' := trace;
-  for i := |r.body| downto 0
-    invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
-    invariant |trace'| <= |trace|
-    invariant forall j :: 0 <= j < |nodes| ==> nodes[j].wf()
-  {
-    var e: Event := head; // temporary assignment to prevent Dafny from agitating, although I don't like it
-    while |trace'| > 0
-      invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
-      invariant e.prop.concrete()
-      invariant |trace'| <= |trace|
-      decreases |trace'|
-    {
-      e := trace'[|trace'|-1];
-      trace' := trace'[..|trace'|-1];
-      var new_subst := map[];
-      var maybe_new_subst := unify(r.body[i], e.prop);
-      match maybe_new_subst {
-        case Ok(substitution) => new_subst := substitution;
-        case Err => {
-          // print "could not create new_subst\n"; // this should not be an error, this should go back to earlier in while loop
-          // return Err;
-          continue;
-        }
-      }
-      var maybe_assignment := merge_subst(assignment, new_subst);
-      match maybe_assignment {
-        case Ok(substitution) => assignment := substitution;
-        case Err => {
-          // print "could not set assignment to a potentially different value\n"; // ditto
-          // return Err;
-          continue;
-        }
-      }
-      break;
-    }
-    if |trace'| == 0 && i > 0 {
-      print "trace consumed earlier than expected\n";
-      return Err;
-    }
-
-    var res := build_trace_tree2(e, trace', rs);
-    if res.Err? {
-      print "error\n";
-      return Err;
-    }
-    var outcome := res.val.0;
-    if outcome.Failure? {
-      print "failure\n";
-      return Ok((Failure, trace));
-    }
-    trace' := res.val.1;
-    // print "outcome.nodes = ";
-    // print outcome.nodes;
-    // print "\n";
-    nodes := outcome.nodes + nodes; // outcome only stores one node in this method
-  }
-  // print head.prop;
-  // print "\n\n";
-  // print assignment;
-  // print "\n\n";
-  return Ok((Success([TraceNode(head.i, head.prop, nodes)]), trace')); // the sequence only has one node in it
-}
-
-// note: here, outcome is used to store only one node
-method build_trace_tree3(trace: Trace, rs: RuleSet) returns (res : Result<(Outcome, Trace)>)
+method build_trace_tree2(trace: Trace, rs: RuleSet) returns (res : Result<(Outcome, Trace)>)
   requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
   requires |trace| > 0
   ensures res.Ok? ==> forall j :: 0 <= j < |res.val.1| ==> res.val.1[j].prop.concrete()
@@ -687,8 +577,6 @@ method build_trace_tree3(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
-  // print head.prop;
-  // print "\n";
   if |trace| == 0 {
     return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
   }
@@ -756,7 +644,7 @@ method build_trace_tree3(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
       return Err;
     }
 
-    var res := build_trace_tree3(trace', rs);
+    var res := build_trace_tree2(trace', rs);
     if res.Err? {
       print "error\n";
       return Err;
@@ -767,17 +655,8 @@ method build_trace_tree3(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
       return Ok((Failure, trace));
     }
     trace' := res.val.1;
-    // print "outcome.nodes = ";
-    // print outcome.nodes;
-    // print "\n";
     nodes := outcome.nodes + nodes; // outcome only stores one node in this method
   }
-  // print |trace'|;
-  // print "\n";
-  // print head.prop;
-  // print "\n";
-  // print assignment;
-  // print "\n\n";
   return Ok((Success([TraceNode(head.i, head.prop, nodes)]), trace')); // the sequence only has one node in it
 }
 
@@ -789,13 +668,17 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   ensures res.Ok? ==> res.val.0.wf(rs)
   decreases |trace|
 {
-  // print |trace|;
-  // print "\n";
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
   var ri: nat;
   var maybe_ri := lookup_rule(rs, head.i);
+  // Notes to self:
+  // Here, the code makes the incorrect assumption that this is a rule (App), instead of a builtin or equality.
+  // Answer: if it were a builtin or equality, head.i equals 0.
+  // If it were a builtin or equality, that would be a terminal point (leaf), so there woud be no need to iterate through children (there are none).
+  // So it could just return after figuring it out.
+  // Additionally, it should be noted that facts (rules without children) are currently handled because the for loop is automatically skipped.
   match maybe_ri {
     case Ok(index) => ri := index;
     case Err => {
@@ -804,23 +687,9 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
     }
   }
   var r := rs[ri];
-
-  // print head.prop;
-  // print "\n";
   if |trace| == 0 {
-    // return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
-    // print "this was reached\n";
     return Ok(((mk_thm(rs, ri, map[], []).val), trace'));
   }
-  
-  // Notes to self:
-  // Here, the code makes the incorrect assumption that this is a rule (App), instead of a builtin or equality.
-  // If it were a builtin or equality, then what would the line number be in the trace? What do builtins and equalities look like in the trace?
-  // Answer: if it were a builtin or equality, head.i equals 0.
-  // If it were a builtin or equality, that would be a terminal point (leaf), so there woud be no need to iterate through children (there are none).
-  // So it could just return after figuring it out.
-  // Additionally, it should be noted that facts (rules without children) are currently handled because the for loop is automatically skipped.
-
   var args: seq<Thm> := [];
   var assignment := map[];
   var maybe_assignment := unify(r.head, head.prop);
@@ -831,8 +700,6 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
       return Err;
     }
   }
-  // print |trace|;
-  // print " [[[\n";
   for i := |r.body| downto 0
     invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
     invariant |trace'| < |trace|
@@ -873,33 +740,9 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
       return Err;
     }
     trace' := res.val.1;
-    // print "args = ";
-    // print args;
-    // print "\n";
     args := [res.val.0] + args;
   }
-  // print "]]] "; print |trace|; print "\n";
-  // print head.prop;
-  // print "\n";
-  // print assignment;
-  // print "\n";
-  // assume{:axiom}(forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete());
-  // assume{:axiom}(|trace| > 0);
-  // assume{:axiom}(head.i < |rs|); // this assumption is no longer needed!!
-  // assume{:axiom}(forall j :: 0 <= j < |args| ==> args[j].wf(rs)); // no longer needed
-  // print |trace'|; print "\n";
-  // print "maybe_thm: "; print r; print " ;; "; print assignment; print " ;; "; print args; print "\n";
   var maybe_thm := mk_thm(rs, ri, assignment, args);
-  // var thm;
-  // match maybe_thm {
-  //   case Ok(theorem) => thm := theorem;
-  //   case Err => {
-  //     print "could not get theorem\n";
-  //     return Err;
-  //   }
-  // }
-  // return Ok((thm, trace'));
-  // Deduce theorem.
   match maybe_thm {
     case Ok(thm) => {
       return Ok((thm, trace'));
@@ -910,46 +753,6 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
     }
   }
 }
-/*
-[Rule.Rule(Prop.App(node, [Term.Const(Const.Atom(n0))]), [], 1), Rule.Rule(Prop.App(node, [Term.Const(Const.Atom(n1))]), [], 2), Rule.Rule(Prop.App(node, [Term.Const(Const.Atom(n2))]), [], 3), Rule.Rule(Prop.App(node, [Term.Const(Const.Atom(n3))]), [], 4), Rule.Rule(Prop.App(node, [Term.Const(Const.Atom(m0))]), [], 5), Rule.Rule(Prop.App(node, [Term.Const(Const.Atom(m1))]), [], 6), Rule.Rule(Prop.App(node, [Term.Const(Const.Atom(m2))]), [], 7), Rule.Rule(Prop.App(node, [Term.Const(Const.Atom(m3))]), [], 8), Rule.Rule(Prop.App(node, [Term.Const(Const.Atom(n4))]), [], 9), Rule.Rule(Prop.App(edge, [Term.Const(Const.Atom(n3)), Term.Const(Const.Atom(n4))]), [], 10), Rule.Rule(Prop.App(edge, [Term.Const(Const.Atom(n1)), Term.Const(Const.Atom(n3))]), [], 11), Rule.Rule(Prop.App(edge, [Term.Const(Const.Atom(n1)), Term.Const(Const.Atom(n2))]), [], 12), Rule.Rule(Prop.App(edge, [Term.Const(Const.Atom(n0)), Term.Const(Const.Atom(n1))]), [], 13), Rule.Rule(Prop.App(edge, [Term.Const(Const.Atom(n1)), Term.Const(Const.Atom(m0))]), [], 14), Rule.Rule(Prop.App(edge, [Term.Const(Const.Atom(m0)), Term.Const(Const.Atom(m1))]), [], 15), Rule.Rule(Prop.App(edge, [Term.Const(Const.Atom(m1)), Term.Const(Const.Atom(m2))]), [], 16),
-Rule.Rule(Prop.App(edge, [Term.Const(Const.Atom(m2)), Term.Const(Const.Atom(m3))]), [], 17),
-Rule.Rule(Prop.App(source, [Term.Const(Const.Atom(n0))]), [], 18),
-Rule.Rule(Prop.App(destination, [Term.Const(Const.Atom(m3))]), [], 19),
-Rule.Rule(Prop.App(connected, [Term.Var(A), Term.Var(B)]), [Prop.App(edge, [Term.Var(A), Term.Var(B)])], 20), Rule.Rule(Prop.App(connected, [Term.Var(A), Term.Var(B)]), [Prop.App(edge, [Term.Var(A), Term.Var(M)]), Prop.App(connected, [Term.Var(M), Term.Var(B)])], 21), Rule.Rule(Prop.App(query, [Term.Var(S), Term.Var(D)]), [Prop.App(source, [Term.Var(S)]), Prop.App(destination, [Term.Var(D)]), Prop.App(connected, [Term.Var(S), Term.Var(D)])], 22)]
-*/
-/*
-    var e: Event;
-    while |trace'| > 0
-      decreases trace'
-    {
-      e := trace'[|trace'|-1];
-      trace' := trace'[..|trace'|-1];
-      var new_subst := map[];
-      assume{:axiom}(e.prop.concrete());
-      var maybe_new_subst := unify(r.body[i], e.prop);
-      match maybe_new_subst {
-        case Ok(substitution) => new_subst := substitution;
-        case Err => {
-          // print "could not create new_subst\n"; // this should not be an error, this should go back to earlier in while loop
-          // return Err;
-          continue;
-        }
-      }
-      var maybe_assignment := merge_subst(assignment, new_subst);
-      match maybe_assignment {
-        case Ok(substitution) => assignment := substitution;
-        case Err => {
-          // print "could not set assignment to a potentially different value\n"; // ditto
-          // return Err;
-          continue;
-        }
-      }
-      break;
-    }
-    if |trace'| == 0 {
-      return Err;
-    }
-*/
 
 // Lookup rule with the given id.
 method lookup_rule(rs : RuleSet, id : nat) returns (res : Result<nat>)
@@ -1378,8 +1181,7 @@ method run(rs : RuleSet, trace : Trace) {
     print "The trace is not entirely concrete.\n";
     return;
   }
-  // var res := build_trace_tree2(trace[|trace|-1], trace[..|trace|-1], rs);
-  var res := build_trace_tree3(trace, rs);
+  var res := build_trace_tree2(trace, rs);
   if res.Err? {
     print "error\n";
     return;
