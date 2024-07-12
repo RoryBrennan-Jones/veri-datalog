@@ -565,21 +565,18 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
 }
 
 // note: here, outcome is used to store only one node
-method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : Result<(Outcome, Trace)>) //, bound: nat
-  // requires head.prop.concrete()
-  // requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
-  // ensures res.Ok? && res.val.0.Success? ==> |res.val.0.nodes| == 1
-  // ensures res.Ok? && res.val.0.Success? ==> res.val.0.nodes[0].wf()
-  // decreases bound
+method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : Result<(Outcome, Trace)>)
+  requires head.prop.concrete()
+  requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
+  ensures res.Ok? ==> forall j :: 0 <= j < |res.val.1| ==> res.val.1[j].prop.concrete()
   decreases |trace|
   ensures res.Ok? ==> |res.val.1| <= |trace|
+  // ensures res.Ok? && res.val.0.Success? ==> |res.val.0.nodes| == 1
+  // ensures res.Ok? && res.val.0.Success? ==> res.val.0.nodes[0].wf()
 {
   // print head.prop;
   // print "\n";
 
-  // if bound == 0 {
-  //   return Err;
-  // }
   if |trace| == 0 {
     return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
   }
@@ -602,8 +599,6 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : 
 
   var nodes: seq<TraceNode> := [];
   var assignment := map[];
-  assume{:axiom}(head.prop.concrete());
-  // assert(head.prop.concrete());
   var maybe_assignment := unify(r.head, head.prop);
   match maybe_assignment {
     case Ok(substitution) => assignment := substitution;
@@ -614,36 +609,20 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : 
   }
   
   var trace' := trace;
-  // assert(|trace'| == |trace|);
-  // assert(|trace'| != 0);
-  // var y := |trace|;
   for i := |r.body| downto 0
-    // invariant y <= |trace|
+    invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
     invariant |trace'| <= |trace|
   {
-    // assert(|trace'| != 0);
-    var e: Event := head; // temporary assignment to prevent Dafny from giving an "unintialized warning," although not ideal
-    // var x := |trace'|;
-    // if i == |r.body| {
-    //   assert(|trace'| <= |trace|);
-    // }
+    var e: Event := head; // temporary assignment to prevent Dafny from agitating, although not an ideal solution
     while |trace'| > 0
+      invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
+      invariant e.prop.concrete()
       invariant |trace'| <= |trace|
-      // invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
-      // invariant y <= |trace|
       decreases |trace'|
-      // decreases y
     {
-      // y := y - 1;
       e := trace'[|trace'|-1];
-      trace' := trace'[..|trace'|-1]; // using "var trace'" makes it pass verification
+      trace' := trace'[..|trace'|-1];
       var new_subst := map[];
-      // assert(e.prop.concrete());
-      assume{:axiom}(e.prop.concrete());
-      // assert(forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete());
-      // assert(forall j :: 0 <= j < |trace'| ==> trace'[j] in trace);
-      // assert(forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete());
-      // assert(e.prop.concrete());
       var maybe_new_subst := unify(r.body[i], e.prop);
       match maybe_new_subst {
         case Ok(substitution) => new_subst := substitution;
@@ -664,52 +643,28 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : 
       }
       break;
     }
-    // if i == |r.body| {
-    //   assert(|trace'| <= |trace|);
-    // }
-    // assert(|trace'| <= x);
     if |trace'| == 0 && i > 0 {
       print "trace consumed earlier than expected\n";
       return Err;
     }
 
-    // assert(|trace'| != 0);
-    // assert(|trace| != 0);
-    // assert(|trace| > 0);
-    // assume{:axiom}(|trace'| <= |trace|);
-    // assert(|trace'| <= |trace|);
-    // assert(|trace'| <= |trace|);
-    // assert(e.prop.concrete());
-    // assert(forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete());
-    var res := build_trace_tree2(e, trace', rs); // , bound-1
+    assert(e.prop.concrete());
+    assert(forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete());
+    var res := build_trace_tree2(e, trace', rs);
     if res.Err? {
       print "error\n";
       return Err;
     }
     var outcome := res.val.0;
-    // assert(|trace'| <= x);
     if outcome.Failure? {
       print "failure\n";
       return Ok((Failure, trace));
     }
-    // if i == |r.body| {
-    //   assert(|res.val.1| <= |trace'|);
-    // }
     trace' := res.val.1;
-    // if i == |r.body| {
-    //   assert(|trace'| <= x);
-    //   assert(|trace'| <= |trace|);
-    // }
     // print "outcome.nodes = ";
     // print outcome.nodes;
     // print "\n";
     nodes := outcome.nodes + nodes; // outcome only stores one node in this method
-
-///
-    // if |trace'| == 0 {
-    //   return Err;
-    // }
-///
   }
   print head.prop;
   print "\n\n";
@@ -1175,7 +1130,11 @@ method run(rs : RuleSet, trace : Trace) {
     print "There is no trace because it did not succeed.\n";
     return;
   }
-  var res := build_trace_tree2(trace[|trace|-1], trace[..|trace|-1], rs); //, 0x1000_0000_0000
+  if !(forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()) {
+    print "The trace is not entirely concrete.\n";
+    return;
+  }
+  var res := build_trace_tree2(trace[|trace|-1], trace[..|trace|-1], rs);
   if res.Err? {
     print "error\n";
     return;
