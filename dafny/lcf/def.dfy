@@ -795,21 +795,6 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
-  // print head.prop;
-  // print "\n";
-  if |trace| == 0 {
-    // return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
-    // print "this was reached\n";
-    return Ok(((mk_thm(rs, head.i, map[], []).val), trace'));
-  }
-  
-  // Notes to self:
-  // Here, the code makes the incorrect assumption that this is a rule (App), instead of a builtin or equality.
-  // If it were a builtin or equality, then what would the line number be in the trace? What do builtins and equalities look like in the trace?
-  // Answer: if it were a builtin or equality, head.i equals 0.
-  // If it were a builtin or equality, that would be a terminal point (leaf), so there woud be no need to iterate through children (there are none).
-  // So it could just return after figuring it out.
-  // Additionally, it should be noted that facts (rules without children) are currently handled because the for loop is automatically skipped.
   var ri: nat;
   var maybe_ri := lookup_rule(rs, head.i);
   match maybe_ri {
@@ -820,6 +805,22 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
     }
   }
   var r := rs[ri];
+
+  // print head.prop;
+  // print "\n";
+  if |trace| == 0 {
+    // return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
+    // print "this was reached\n";
+    return Ok(((mk_thm(rs, ri, map[], []).val), trace'));
+  }
+  
+  // Notes to self:
+  // Here, the code makes the incorrect assumption that this is a rule (App), instead of a builtin or equality.
+  // If it were a builtin or equality, then what would the line number be in the trace? What do builtins and equalities look like in the trace?
+  // Answer: if it were a builtin or equality, head.i equals 0.
+  // If it were a builtin or equality, that would be a terminal point (leaf), so there woud be no need to iterate through children (there are none).
+  // So it could just return after figuring it out.
+  // Additionally, it should be noted that facts (rules without children) are currently handled because the for loop is automatically skipped.
 
   var args: seq<Thm> := [];
   var assignment := map[];
