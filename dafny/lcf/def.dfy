@@ -781,7 +781,7 @@ method build_trace_tree3(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
   return Ok((Success([TraceNode(head.i, head.prop, nodes)]), trace')); // the sequence only has one node in it
 }
 
-method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Match, Trace)>)
+method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, Trace)>)
   requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
   requires |trace| > 0
   ensures res.Ok? ==> forall j :: 0 <= j < |res.val.1| ==> res.val.1[j].prop.concrete()
@@ -800,7 +800,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Match,
   if |trace| == 0 {
     // return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
     // print "this was reached\n";
-    return Ok(((Match(map[], mk_thm(rs, head.i, map[], []).val)), trace'));
+    return Ok(((mk_thm(rs, head.i, map[], []).val), trace'));
   }
   
   // Notes to self:
@@ -876,7 +876,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Match,
     // print "args = ";
     // print args;
     // print "\n";
-    args := [res.val.0.thm] + args;
+    args := [res.val.0] + args;
   }
   // print "]]] "; print |trace|; print "\n";
   // print head.prop;
@@ -902,7 +902,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Match,
   // Deduce theorem.
   match maybe_thm {
     case Ok(thm) => {
-      return Ok(((Match(assignment, thm)), trace'));
+      return Ok((thm, trace'));
     }
     case Err => {
       print "failed to deduce thm\n";
@@ -1416,7 +1416,7 @@ method run(rs : RuleSet, trace : Trace) {
     print "reconstruction error\n";
     return;
   }
-  print "thm: ", maybe_match.val.0.thm, "\n";
+  print "thm: ", maybe_match.val.0, "\n";
   print "OK\n";
 }
 
