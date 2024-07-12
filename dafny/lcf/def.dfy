@@ -569,10 +569,10 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : 
   requires head.prop.concrete()
   requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
   ensures res.Ok? ==> forall j :: 0 <= j < |res.val.1| ==> res.val.1[j].prop.concrete()
-  decreases |trace|
   ensures res.Ok? ==> |res.val.1| <= |trace|
-  // ensures res.Ok? && res.val.0.Success? ==> |res.val.0.nodes| == 1
-  // ensures res.Ok? && res.val.0.Success? ==> res.val.0.nodes[0].wf()
+  ensures res.Ok? && res.val.0.Success? ==> |res.val.0.nodes| == 1
+  ensures res.Ok? && res.val.0.Success? ==> res.val.0.nodes[0].wf()
+  decreases |trace|
 {
   // print head.prop;
   // print "\n";
@@ -581,11 +581,13 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : 
     return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
   }
   
+  // Notes to self:
   // Here, the code makes the incorrect assumption that this is a rule (App), instead of a builtin or equality.
   // If it were a builtin or equality, then what would the line number be in the trace? What do builtins and equalities look like in the trace?
   // Answer: if it were a builtin or equality, head.i equals 0.
   // If it were a builtin or equality, that would be a terminal point (leaf), so there woud be no need to iterate through children (there are none).
   // So it could just return after figuring it out.
+  // Additionally, it should be noted that facts (rules without children) are currently handled because the for loop is automatically skipped.
   var ri: nat;
   var maybe_ri := lookup_rule(rs, head.i);
   match maybe_ri {
@@ -612,6 +614,7 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : 
   for i := |r.body| downto 0
     invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
     invariant |trace'| <= |trace|
+    invariant forall j :: 0 <= j < |nodes| ==> nodes[j].wf()
   {
     var e: Event := head; // temporary assignment to prevent Dafny from agitating, although not an ideal solution
     while |trace'| > 0
@@ -648,8 +651,6 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : 
       return Err;
     }
 
-    assert(e.prop.concrete());
-    assert(forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete());
     var res := build_trace_tree2(e, trace', rs);
     if res.Err? {
       print "error\n";
@@ -666,10 +667,10 @@ method build_trace_tree2(head: Event, trace: Trace, rs: RuleSet) returns (res : 
     // print "\n";
     nodes := outcome.nodes + nodes; // outcome only stores one node in this method
   }
-  print head.prop;
-  print "\n\n";
-  print assignment;
-  print "\n\n";
+  // print head.prop;
+  // print "\n\n";
+  // print assignment;
+  // print "\n\n";
   return Ok((Success([TraceNode(head.i, head.prop, nodes)]), trace')); // the sequence only has one node in it
 }
 
@@ -1157,7 +1158,6 @@ method run(rs : RuleSet, trace : Trace) {
   }
   print "\n";
 
-  assume{:axiom}(res.Ok? ==> res.val.0.nodes[0].wf());
   // Deduce theorem.
   var root := outcome.nodes[0];
   var maybe_match := reconstruct(root, root.prop, rs);
