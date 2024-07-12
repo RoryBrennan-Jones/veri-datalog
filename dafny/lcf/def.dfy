@@ -786,8 +786,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   requires |trace| > 0
   ensures res.Ok? ==> forall j :: 0 <= j < |res.val.1| ==> res.val.1[j].prop.concrete()
   ensures res.Ok? ==> |res.val.1| <= |trace|
-  // ensures res.Ok? && res.val.0.Success? ==> |res.val.0.nodes| == 1
-  // ensures res.Ok? && res.val.0.Success? ==> res.val.0.nodes[0].wf()
+  ensures res.Ok? ==> res.val.0.wf(rs)
   decreases |trace|
 {
   // print |trace|;
@@ -837,7 +836,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   for i := |r.body| downto 0
     invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
     invariant |trace'| < |trace|
-    // invariant forall j :: 0 <= j < |nodes| ==> nodes[j].wf()
+    invariant forall j :: 0 <= j < |args| ==> args[j].wf(rs)
   {
     while |trace'| > 0
       invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
@@ -886,8 +885,8 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   // print "\n";
   // assume{:axiom}(forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete());
   // assume{:axiom}(|trace| > 0);
-  assume{:axiom}(head.i < |rs|);
-  assume{:axiom}(forall j :: 0 <= j < |args| ==> args[j].wf(rs));
+  // assume{:axiom}(head.i < |rs|); // this assumption is no longer needed!!
+  // assume{:axiom}(forall j :: 0 <= j < |args| ==> args[j].wf(rs)); // no longer needed
   // print |trace'|; print "\n";
   // print "maybe_thm: "; print r; print " ;; "; print assignment; print " ;; "; print args; print "\n";
   var maybe_thm := mk_thm(rs, ri, assignment, args);
