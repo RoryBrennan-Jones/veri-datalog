@@ -577,17 +577,11 @@ method build_trace_tree2(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
+  // TODO: write code here for handling BuiltinOps and Eqs
   if |trace| == 0 {
-    return Ok((Success([TraceNode(head.i, head.prop, [])]), trace)); // this is a terminal point in the tree, but there are many other terminal points
+    return Ok((Success([TraceNode(head.i, head.prop, [])]), trace));
   }
   
-  // Notes to self:
-  // Here, the code makes the incorrect assumption that this is a rule (App), instead of a builtin or equality.
-  // If it were a builtin or equality, then what would the line number be in the trace? What do builtins and equalities look like in the trace?
-  // Answer: if it were a builtin or equality, head.i equals 0.
-  // If it were a builtin or equality, that would be a terminal point (leaf), so there woud be no need to iterate through children (there are none).
-  // So it could just return after figuring it out.
-  // Additionally, it should be noted that facts (rules without children) are currently handled because the for loop is automatically skipped.
   var ri: nat;
   var maybe_ri := lookup_rule(rs, head.i);
   match maybe_ri {
@@ -671,14 +665,35 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
+  // match head.prop {
+  //   case App(_, _) => {}
+  //   case Eq(l, r) => {
+  //     var maybe_leaf := mk_leaf(Eq(l, r));
+  //     match maybe_leaf {
+  //       case Ok(thm) => {
+  //         return Ok((thm, trace'));
+  //       }
+  //       case Err => {
+  //         print "failed to deduce eq\n";
+  //         return Err;
+  //       }
+  //     }
+  //   }
+  //   case BuiltinOp(b, args) => {
+  //     var maybe_leaf := mk_leaf(BuiltinOp(b, args));
+  //     match maybe_leaf {
+  //       case Ok(thm) => {
+  //         return Ok((thm, trace'));
+  //       }
+  //       case Err => {
+  //         print "failed to deduce builtin\n";
+  //         return Err;
+  //       }
+  //     }
+  //   }
+  // }
   var ri: nat;
   var maybe_ri := lookup_rule(rs, head.i);
-  // Notes to self:
-  // Here, the code makes the incorrect assumption that this is a rule (App), instead of a builtin or equality.
-  // Answer: if it were a builtin or equality, head.i equals 0.
-  // If it were a builtin or equality, that would be a terminal point (leaf), so there woud be no need to iterate through children (there are none).
-  // So it could just return after figuring it out.
-  // Additionally, it should be noted that facts (rules without children) are currently handled because the for loop is automatically skipped.
   match maybe_ri {
     case Ok(index) => ri := index;
     case Err => {
@@ -733,7 +748,6 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
       print "trace consumed earlier than expected\n";
       return Err;
     }
-
     var res := build_proof_tree(trace', rs);
     if res.Err? {
       print "error\n";
