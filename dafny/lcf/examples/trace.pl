@@ -43,6 +43,6 @@ prolog_trace_interception(Port, Frame, Choice, continue) :- % _Choice
 :- visible(-all).
 :- visible(+exit).
 :- leash(-all).
-:- include(connectivity2).
-:- trace, go, notrace. % query(n0, n3)
-:- halt.
+%:- include(connectivity2).
+%:- trace, go, notrace. % query(n0, n3)
+%:- halt.

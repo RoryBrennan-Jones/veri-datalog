@@ -10,3 +10,4 @@ destination(n3).
 connected(A, B) :- edge(A, B).
 connected(A, B) :- edge(A, M), connected(M, B).
 query(S, D) :- source(S), destination(D), connected(S, D).
+go :- query(n0, n3).
