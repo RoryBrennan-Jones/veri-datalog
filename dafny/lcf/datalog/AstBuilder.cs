@@ -73,8 +73,14 @@ namespace _module
 
     public override object VisitClause(datalogParser.ClauseContext context) {
       var name = Sequence<char>.FromString(context.name.Text);
-      var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
-      return new _module.Prop_App(name, terms);
+      if (context.term_list() == null ) {
+        var terms = new List<_module.Term>();
+        var terms2 = Sequence<_module.Term>.Create(terms.Count, i => terms[(int) i]);
+        return new _module.Prop_App(name, (Dafny.ISequence<_ITerm>) terms2);
+      } else {
+        var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
+        return new _module.Prop_App(name, terms);
+      }
     }
 
     public override object VisitAtom(datalogParser.AtomContext context) {

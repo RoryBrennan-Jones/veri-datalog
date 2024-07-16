@@ -37,7 +37,7 @@ rule
   ;
 
 clause
-  : name=Identifier '(' term_list ')'
+  : name=Identifier ( '(' term_list ')' )?
   ;
 
 term
