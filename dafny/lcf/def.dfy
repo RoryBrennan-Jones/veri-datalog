@@ -583,10 +583,10 @@ method build_trace_tree2(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
   trace' := trace'[..|trace'|-1];
 
   match head.prop {
-    case Eq(l, r) => {
+    case Eq(_, _) => {
       return Ok((Success([TraceNode(0, head.prop, [])]), trace'));
     }
-    case BuiltinOp(b, args) => {
+    case BuiltinOp(_, _) => {
       return Ok((Success([TraceNode(0, head.prop, [])]), trace'));
     }
     case App(_, _) => {
@@ -659,7 +659,7 @@ method build_trace_tree2(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
         trace' := res.val.1;
         nodes := outcome.nodes + nodes; // outcome only stores one node in this method
       }
-      
+
       return Ok((Success([TraceNode(head.i, head.prop, nodes)]), trace')); // the sequence only has one node in it
     }
   }
