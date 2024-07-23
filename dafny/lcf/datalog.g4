@@ -47,8 +47,8 @@ term
 
 const
   : atom
-  | string
   | natural
+  | string
   ;
 
 clause_list
@@ -68,7 +68,7 @@ natural
   ;
 
 string
-  : val=Str
+  : s=Str
   ;
 
 variable
@@ -79,6 +79,7 @@ variable
  * Lexer Rules
  */
 
+fragment CHARACTER: ' ' | '\r' | '\n' | '\t' | ALPHA | DIGIT;
 fragment ALPHANUMERIC: ALPHA | DIGIT ;
 fragment ALPHA: '_' | SMALL_LETTER | CAPITAL_LETTER ;
 fragment LEADER: '_' | CAPITAL_LETTER;
@@ -102,17 +103,13 @@ Int
 	: ('-')? Digit+
 	;
 
-///
 Nat
   : Digit+
   ;
 
-fragment CHARACTER: ' ' | '\r' | '\n' | '\t' | '_' | ALPHA | DIGIT;
-
 Str
   : '"' CHARACTER* '"' 
   ;
-///
 
 fragment Nondigit
 	: [a-zA-Z]

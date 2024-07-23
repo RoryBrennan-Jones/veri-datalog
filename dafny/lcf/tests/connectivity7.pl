@@ -6,4 +6,4 @@ connected(A, B) :-
 connected(A, C) :-
     edge(A, B),
     connected(B, C).
-go :- connected("cat", "fish").
+go :- connected("dog", "fish").

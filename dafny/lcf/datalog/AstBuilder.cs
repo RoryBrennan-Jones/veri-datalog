@@ -87,12 +87,12 @@ namespace _module
       return new Term_Const(new Const_Atom(Sequence<char>.FromString(context.val.Text)));
     }
 
-    public override object VisitString(datalogParser.StringContext context) {
-      return new Term_Const(new Const_Str(Sequence<char>.FromString(context.val.Text)));
-    }
-
     public override object VisitNatural(datalogParser.NaturalContext context) {
       return new Term_Const(new Const_Nat(BigInteger.Parse(context.numeral.Text)));
+    }
+
+    public override object VisitString(datalogParser.StringContext context) {
+      return new Term_Const(new Const_Str(Sequence<char>.FromString(context.s.Text)));
     }
 
     public override object VisitVariable(datalogParser.VariableContext context) {
