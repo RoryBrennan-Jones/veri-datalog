@@ -72,7 +72,7 @@ namespace _module
     }
 
     public override object VisitClause(datalogParser.ClauseContext context) {
-      if (context.name.Text == "=" || context.name.Text == "=<") {
+      if (context.name.Text == "=" || context.name.Text == "=<" || context.name.Text == ">=" || context.name.Text == "\\=") {
         var left = (_module.Term)VisitTerm(context.left);
         var right = (_module.Term)VisitTerm(context.right);
         var terms = new List<_module.Term> { left, right };
