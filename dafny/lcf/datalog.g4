@@ -41,9 +41,13 @@ clause
   ;
 
 term
+  : const
+  | variable
+  ;
+
+const
   : natural
   | atom
-  | variable
   ;
 
 clause_list
