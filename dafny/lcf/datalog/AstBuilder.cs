@@ -78,8 +78,12 @@ namespace _module
         var terms = new List<_module.Term> { left, right };
         var terms2 = (Dafny.ISequence<_ITerm>) Sequence<_module.Term>.Create(terms.Count, i => terms[(int) i]);
         switch(context.name.Text) {
+          case "\\=":
+            return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
           case "=<":
             return new _module.Prop_BuiltinOp(new _module.Builtin_NatLeq(), terms2);
+          case ">=":
+            return new _module.Prop_BuiltinOp(new _module.Builtin_NatGeq(), terms2);
           default:
             return new _module.Prop_Eq(left, right);
         }
