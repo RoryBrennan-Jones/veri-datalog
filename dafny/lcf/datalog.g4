@@ -46,8 +46,9 @@ term
   ;
 
 const
-  : natural
-  | atom
+  : atom
+  | string
+  | natural
   ;
 
 clause_list
@@ -58,13 +59,16 @@ term_list
   : term ( ',' term)*
   ;
 
-natural
-  : numeral=Int
-  ;
-
-
 atom
   : val=Identifier
+  ;
+
+natural
+  : numeral=Int // telling it to use Nat doesn't work
+  ;
+
+string
+  : val=Str
   ;
 
 variable
@@ -98,9 +102,17 @@ Int
 	: ('-')? Digit+
 	;
 
+///
 Nat
   : Digit+
   ;
+
+fragment CHARACTER: ' ' | '\r' | '\n' | '\t' | '_' | ALPHA | DIGIT;
+
+Str
+  : '"' CHARACTER* '"' 
+  ;
+///
 
 fragment Nondigit
 	: [a-zA-Z]
