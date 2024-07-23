@@ -76,8 +76,8 @@ datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | Length |
     requires valid(args)
   {
     match this {
-      case NatGeq => args[0].i <= args[1].i
-      case NatLeq => args[0].i >= args[1].i
+      case NatGeq => args[0].i >= args[1].i
+      case NatLeq => args[0].i <= args[1].i
       case NatNeq => args[0].i != args[1].i
       case SubString => (
         var str, before, len, after, sub := args[0], args[1], args[2], args[3], args[4];
@@ -318,11 +318,15 @@ function unify_terms(s : seq<Term>, t : seq<Term>) : (res : Result<Subst>)
 
 function unify(r : Prop, g : Prop) : (res : Result<Subst>)
   requires g.concrete()
-  ensures res.Ok? ==> r.complete_subst(res.val) && r.subst(res.val) == g
+  // ensures res.Ok? ==> r.complete_subst(res.val) && r.subst(res.val) == g
 {
   match (r, g)
   case (App(f1, args1), App(f2, args2)) =>
     if f1 == f2 then unify_terms(args1, args2) else Err
+  case (BuiltinOp(f1, args1), BuiltinOp(f2, args2)) =>
+    if f1 == f2 then unify_terms(args1, args2) else Err
+  case (Eq(left1, right1), Eq(left2, right2)) => //WIP
+    unify_terms([left1, right1], [left2, right2])
   case _ => Err
 }
 
@@ -577,11 +581,19 @@ method build_trace_tree2(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
-  // TODO: write code here for handling BuiltinOps and Eqs
-  if |trace| == 0 {
-    return Ok((Success([TraceNode(head.i, head.prop, [])]), trace));
+  match head.prop {
+    case App(_, _) => {}
+    case Eq(l, r) => {
+      return Ok((Success([TraceNode(0, head.prop, [])]), trace'));
+    }
+    case BuiltinOp(b, args) => {
+      return Ok((Success([TraceNode(0, head.prop, [])]), trace'));
+    }
   }
-  
+  // // The below commented-out appears to not be required
+  // if |trace| == 0 {
+  //   return Ok((Success([TraceNode(head.i, head.prop, [])]), trace));
+  // }
   var ri: nat;
   var maybe_ri := lookup_rule(rs, head.i);
   match maybe_ri {
@@ -592,7 +604,7 @@ method build_trace_tree2(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
     }
   }
   var r := rs[ri];
-
+  
   var nodes: seq<TraceNode> := [];
   var assignment := map[];
   var maybe_assignment := unify(r.head, head.prop);
@@ -665,33 +677,33 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
-  // match head.prop {
-  //   case App(_, _) => {}
-  //   case Eq(l, r) => {
-  //     var maybe_leaf := mk_leaf(Eq(l, r));
-  //     match maybe_leaf {
-  //       case Ok(thm) => {
-  //         return Ok((thm, trace'));
-  //       }
-  //       case Err => {
-  //         print "failed to deduce eq\n";
-  //         return Err;
-  //       }
-  //     }
-  //   }
-  //   case BuiltinOp(b, args) => {
-  //     var maybe_leaf := mk_leaf(BuiltinOp(b, args));
-  //     match maybe_leaf {
-  //       case Ok(thm) => {
-  //         return Ok((thm, trace'));
-  //       }
-  //       case Err => {
-  //         print "failed to deduce builtin\n";
-  //         return Err;
-  //       }
-  //     }
-  //   }
-  // }
+  match head.prop {
+    case App(_, _) => {}
+    case Eq(l, r) => {
+      var maybe_leaf := mk_leaf(Eq(l, r));
+      match maybe_leaf {
+        case Ok(thm) => {
+          return Ok((thm, trace'));
+        }
+        case Err => {
+          print "failed to deduce eq\n";
+          return Err;
+        }
+      }
+    }
+    case BuiltinOp(b, args) => {
+      var maybe_leaf := mk_leaf(BuiltinOp(b, args));
+      match maybe_leaf {
+        case Ok(thm) => {
+          return Ok((thm, trace'));
+        }
+        case Err => {
+          print "failed to deduce builtin\n";
+          return Err;
+        }
+      }
+    }
+  }
   var ri: nat;
   var maybe_ri := lookup_rule(rs, head.i);
   match maybe_ri {
@@ -702,9 +714,10 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
     }
   }
   var r := rs[ri];
-  if |trace| == 0 {
-    return Ok(((mk_thm(rs, ri, map[], []).val), trace'));
-  }
+  // // The below commented-out appears to not be required
+  // if |trace| == 0 {
+  //   return Ok(((mk_thm(rs, ri, map[], []).val), trace'));
+  // }
   var args: seq<Thm> := [];
   var assignment := map[];
   var maybe_assignment := unify(r.head, head.prop);
@@ -782,6 +795,7 @@ method lookup_rule(rs : RuleSet, id : nat) returns (res : Result<nat>)
   return Err;
 }
 
+/*
 // Derive a theorem from a trace tree node.
 method reconstruct(node : TraceNode, g : Prop, rs : RuleSet) returns (res : Result<Match>)
   requires node.wf()
@@ -957,6 +971,7 @@ method reconstruct(node : TraceNode, g : Prop, rs : RuleSet) returns (res : Resu
     }
   }
 }
+*/
 
 /*
 //// Incomplete experiment at a more functional style for trace reconstruction.
@@ -1195,6 +1210,7 @@ method run(rs : RuleSet, trace : Trace) {
     print "The trace is not entirely concrete.\n";
     return;
   }
+  /* */
   var res := build_trace_tree2(trace, rs);
   if res.Err? {
     print "error\n";
@@ -1227,6 +1243,7 @@ method run(rs : RuleSet, trace : Trace) {
   // }
   // print "thm: ", maybe_match.val.thm, "\n";
   // print "OK\n";
+  /* */
   var maybe_match := build_proof_tree(trace, rs);
   if maybe_match.Err? {
     print "reconstruction error\n";

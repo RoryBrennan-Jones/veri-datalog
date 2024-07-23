@@ -38,6 +38,7 @@ rule
 
 clause
   : name=Identifier ( '(' term_list ')' )?
+  | left=term name=Operator right=term
   ;
 
 term
@@ -94,6 +95,13 @@ Port
 Identifier
 	: SMALL_LETTER (Nondigit | Digit)*
 	;
+
+Operator
+  : '='
+  | '\\='
+  | '=<'
+  | '>='
+  ;
 
 VarName
   : LEADER (Nondigit | Digit)*
