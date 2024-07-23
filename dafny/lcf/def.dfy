@@ -581,89 +581,88 @@ method build_trace_tree2(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
+
   match head.prop {
-    case App(_, _) => {}
     case Eq(l, r) => {
       return Ok((Success([TraceNode(0, head.prop, [])]), trace'));
     }
     case BuiltinOp(b, args) => {
       return Ok((Success([TraceNode(0, head.prop, [])]), trace'));
     }
-  }
-  // // The below commented-out appears to not be required
-  // if |trace| == 0 {
-  //   return Ok((Success([TraceNode(head.i, head.prop, [])]), trace));
-  // }
-  var ri: nat;
-  var maybe_ri := lookup_rule(rs, head.i);
-  match maybe_ri {
-    case Ok(index) => ri := index;
-    case Err => {
-      print "could not find rule\n";
-      return Err;
-    }
-  }
-  var r := rs[ri];
-  
-  var nodes: seq<TraceNode> := [];
-  var assignment := map[];
-  var maybe_assignment := unify(r.head, head.prop);
-  match maybe_assignment {
-    case Ok(substitution) => assignment := substitution;
-    case Err => {
-      print "could not create assignment\n";
-      return Err;
-    }
-  }
-  
-  for i := |r.body| downto 0
-    invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
-    invariant |trace'| < |trace|
-    invariant forall j :: 0 <= j < |nodes| ==> nodes[j].wf()
-  {
-    while |trace'| > 0
-      invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
-      invariant |trace'| < |trace|
-      decreases |trace'|
-    {
-      var new_subst := map[];
-      var maybe_new_subst := unify(r.body[i], trace'[|trace'|-1].prop);
-      match maybe_new_subst {
-        case Ok(substitution) => new_subst := substitution;
+    case App(_, _) => {
+      var ri: nat;
+      var maybe_ri := lookup_rule(rs, head.i);
+      match maybe_ri {
+        case Ok(index) => ri := index;
         case Err => {
-          trace' := trace'[..|trace'|-1];
-          continue;
+          print "could not find rule\n";
+          return Err;
         }
       }
-      var maybe_assignment := merge_subst(assignment, new_subst);
+      var r := rs[ri];
+      
+      var nodes: seq<TraceNode> := [];
+      var assignment := map[];
+      var maybe_assignment := unify(r.head, head.prop);
       match maybe_assignment {
         case Ok(substitution) => assignment := substitution;
         case Err => {
-          trace' := trace'[..|trace'|-1];
-          continue;
+          print "could not create assignment\n";
+          return Err;
         }
       }
-      break;
-    }
-    if |trace'| == 0 {
-      print "trace consumed earlier than expected\n";
-      return Err;
-    }
 
-    var res := build_trace_tree2(trace', rs);
-    if res.Err? {
-      print "error\n";
-      return Err;
+      for i := |r.body| downto 0
+        invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
+        invariant |trace'| < |trace|
+        invariant forall j :: 0 <= j < |nodes| ==> nodes[j].wf()
+      {
+        while |trace'| > 0
+          invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
+          invariant |trace'| < |trace|
+          decreases |trace'|
+        {
+          var new_subst := map[];
+          var maybe_new_subst := unify(r.body[i], trace'[|trace'|-1].prop);
+          match maybe_new_subst {
+            case Ok(substitution) => new_subst := substitution;
+            case Err => {
+              trace' := trace'[..|trace'|-1];
+              continue;
+            }
+          }
+          var maybe_assignment := merge_subst(assignment, new_subst);
+          match maybe_assignment {
+            case Ok(substitution) => assignment := substitution;
+            case Err => {
+              trace' := trace'[..|trace'|-1];
+              continue;
+            }
+          }
+          break;
+        }
+        if |trace'| == 0 {
+          print "trace consumed earlier than expected\n";
+          return Err;
+        }
+
+        var res := build_trace_tree2(trace', rs);
+        if res.Err? {
+          print "error\n";
+          return Err;
+        }
+        var outcome := res.val.0;
+        if outcome.Failure? {
+          print "failure\n";
+          return Ok((Failure, trace));
+        }
+        trace' := res.val.1;
+        nodes := outcome.nodes + nodes; // outcome only stores one node in this method
+      }
+      
+      return Ok((Success([TraceNode(head.i, head.prop, nodes)]), trace')); // the sequence only has one node in it
     }
-    var outcome := res.val.0;
-    if outcome.Failure? {
-      print "failure\n";
-      return Ok((Failure, trace));
-    }
-    trace' := res.val.1;
-    nodes := outcome.nodes + nodes; // outcome only stores one node in this method
   }
-  return Ok((Success([TraceNode(head.i, head.prop, nodes)]), trace')); // the sequence only has one node in it
 }
 
 method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, Trace)>)
@@ -678,7 +677,6 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
   match head.prop {
-    case App(_, _) => {}
     case Eq(l, r) => {
       var maybe_leaf := mk_leaf(Eq(l, r));
       match maybe_leaf {
@@ -703,80 +701,82 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
         }
       }
     }
-  }
-  var ri: nat;
-  var maybe_ri := lookup_rule(rs, head.i);
-  match maybe_ri {
-    case Ok(index) => ri := index;
-    case Err => {
-      print "could not find rule\n";
-      return Err;
-    }
-  }
-  var r := rs[ri];
-  // // The below commented-out appears to not be required
-  // if |trace| == 0 {
-  //   return Ok(((mk_thm(rs, ri, map[], []).val), trace'));
-  // }
-  var args: seq<Thm> := [];
-  var assignment := map[];
-  var maybe_assignment := unify(r.head, head.prop);
-  match maybe_assignment {
-    case Ok(substitution) => assignment := substitution;
-    case Err => {
-      print "could not create assignment\n";
-      return Err;
-    }
-  }
-  for i := |r.body| downto 0
-    invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
-    invariant |trace'| < |trace|
-    invariant forall j :: 0 <= j < |args| ==> args[j].wf(rs)
-  {
-    while |trace'| > 0
-      invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
-      invariant |trace'| < |trace|
-      decreases |trace'|
-    {
-      var new_subst := map[];
-      var maybe_new_subst := unify(r.body[i], trace'[|trace'|-1].prop);
-      match maybe_new_subst {
-        case Ok(substitution) => new_subst := substitution;
+    case App(_, _) => {
+      var ri: nat;
+      var maybe_ri := lookup_rule(rs, head.i);
+      match maybe_ri {
+        case Ok(index) => ri := index;
         case Err => {
-          trace' := trace'[..|trace'|-1];
-          continue;
+          print "could not find rule\n";
+          return Err;
         }
       }
-      var maybe_assignment := merge_subst(assignment, new_subst);
+      var r := rs[ri];
+
+      var args: seq<Thm> := [];
+      var assignment := map[];
+      var maybe_assignment := unify(r.head, head.prop);
       match maybe_assignment {
         case Ok(substitution) => assignment := substitution;
         case Err => {
-          trace' := trace'[..|trace'|-1];
-          continue;
+          print "could not create assignment\n";
+          return Err;
         }
       }
-      break;
-    }
-    if |trace'| == 0 {
-      print "trace consumed earlier than expected\n";
-      return Err;
-    }
-    var res := build_proof_tree(trace', rs);
-    if res.Err? {
-      print "error\n";
-      return Err;
-    }
-    trace' := res.val.1;
-    args := [res.val.0] + args;
-  }
-  var maybe_thm := mk_thm(rs, ri, assignment, args);
-  match maybe_thm {
-    case Ok(thm) => {
-      return Ok((thm, trace'));
-    }
-    case Err => {
-      print "failed to deduce thm\n";
-      return Err;
+
+      for i := |r.body| downto 0
+        invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
+        invariant |trace'| < |trace|
+        invariant forall j :: 0 <= j < |args| ==> args[j].wf(rs)
+      {
+        while |trace'| > 0
+          invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
+          invariant |trace'| < |trace|
+          decreases |trace'|
+        {
+          var new_subst := map[];
+          var maybe_new_subst := unify(r.body[i], trace'[|trace'|-1].prop);
+          match maybe_new_subst {
+            case Ok(substitution) => new_subst := substitution;
+            case Err => {
+              trace' := trace'[..|trace'|-1];
+              continue;
+            }
+          }
+          var maybe_assignment := merge_subst(assignment, new_subst);
+          match maybe_assignment {
+            case Ok(substitution) => assignment := substitution;
+            case Err => {
+              trace' := trace'[..|trace'|-1];
+              continue;
+            }
+          }
+          break;
+        }
+        if |trace'| == 0 {
+          print "trace consumed earlier than expected\n";
+          return Err;
+        }
+
+        var res := build_proof_tree(trace', rs);
+        if res.Err? {
+          print "error\n";
+          return Err;
+        }
+        trace' := res.val.1;
+        args := [res.val.0] + args;
+      }
+
+      var maybe_thm := mk_thm(rs, ri, assignment, args);
+      match maybe_thm {
+        case Ok(thm) => {
+          return Ok((thm, trace'));
+        }
+        case Err => {
+          print "failed to deduce thm\n";
+          return Err;
+        }
+      }
     }
   }
 }
