@@ -91,6 +91,10 @@ namespace _module
       return new Term_Var(Sequence<char>.FromString(context.name.Text));
     }
 
+    public override object VisitNatural(datalogParser.NaturalContext context) {
+      return new Term_Const(new Const_Nat(BigInteger.Parse(context.numeral.Text)));
+    }
+
     public override object VisitClause_list(datalogParser.Clause_listContext context) {
       var props = new List<_module.Prop>();
       foreach (var clause in context.clause()) {

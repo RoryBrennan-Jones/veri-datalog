@@ -41,7 +41,8 @@ clause
   ;
 
 term
-  : atom
+  : natural
+  | atom
   | variable
   ;
 
@@ -50,8 +51,13 @@ clause_list
   ;
 
 term_list
-  : term( ',' term)*
+  : term ( ',' term)*
   ;
+
+natural
+  : numeral=Int
+  ;
+
 
 atom
   : val=Identifier
@@ -87,6 +93,10 @@ VarName
 Int
 	: ('-')? Digit+
 	;
+
+Nat
+  : Digit+
+  ;
 
 fragment Nondigit
 	: [a-zA-Z]
