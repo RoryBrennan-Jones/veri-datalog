@@ -37,8 +37,21 @@ rule
   ;
 
 clause
+  : builtin
+  | app
+  | expression
+  ;
+
+builtin
+  : name=Builtin '(' term_list ')'
+  ;
+
+app
   : name=Identifier ( '(' term_list ')' )?
-  | left=term name=Operator right=term
+  ;
+
+expression
+  : left=term name=Operator right=term
   ;
 
 term
@@ -90,6 +103,10 @@ fragment DIGIT: [0-9];
 
 Port
   : 'call' | 'redo' | 'unify' | 'exit' | 'fail'
+  ;
+
+Builtin
+  : 'sub_string'
   ;
 
 Identifier

@@ -71,43 +71,43 @@ namespace _module
       return context.Start.Line;
     }
 
-    public override object VisitClause(datalogParser.ClauseContext context) {
-      if (context.name.Text == "="
-          || context.name.Text == "=<"
-          || context.name.Text == ">="
-          || context.name.Text == "\\="
-          || context.name.Text == "=="
-          || context.name.Text == "=\\="
-      ) {
-        var left = (_module.Term)VisitTerm(context.left);
-        var right = (_module.Term)VisitTerm(context.right);
-        var terms = new List<_module.Term> { left, right };
-        var terms2 = (Dafny.ISequence<_ITerm>) Sequence<_module.Term>.Create(terms.Count, i => terms[(int) i]);
-        switch(context.name.Text) {
-          case "=<":
-            return new _module.Prop_BuiltinOp(new _module.Builtin_NatLeq(), terms2);
-          case ">=":
-            return new _module.Prop_BuiltinOp(new _module.Builtin_NatGeq(), terms2);
-          case "\\=":
-            return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
-          case "=\\=":
-            return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
-          default:
-            return new _module.Prop_Eq(left, right);
-        }
-      } else if (context.name.Text == "sub_string") {
+    public override object VisitBuiltin(datalogParser.BuiltinContext context) {
+      // if (context.name.Text == "sub_string") {
         var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
         return new _module.Prop_BuiltinOp(new _module.Builtin_SubString(), terms);
+      // } else {
+
+      // }
+    }
+
+    public override object VisitExpression(datalogParser.ExpressionContext context) {
+      var left = (_module.Term)VisitTerm(context.left);
+      var right = (_module.Term)VisitTerm(context.right);
+      var terms = new List<_module.Term> { left, right };
+      var terms2 = (Dafny.ISequence<_ITerm>) Sequence<_module.Term>.Create(terms.Count, i => terms[(int) i]);
+      switch(context.name.Text) {
+        case "=<":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_NatLeq(), terms2);
+        case ">=":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_NatGeq(), terms2);
+        case "\\=":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
+        case "=\\=":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
+        default:
+          return new _module.Prop_Eq(left, right);
+      }
+    }
+
+    public override object VisitApp(datalogParser.AppContext context) {
+      var name = Sequence<char>.FromString(context.name.Text);
+      if (context.term_list() == null ) {
+        var terms = new List<_module.Term>();
+        var terms2 = Sequence<_module.Term>.Create(terms.Count, i => terms[(int) i]);
+        return new _module.Prop_App(name, (Dafny.ISequence<_ITerm>) terms2);
       } else {
-        var name = Sequence<char>.FromString(context.name.Text);
-        if (context.term_list() == null ) {
-          var terms = new List<_module.Term>();
-          var terms2 = Sequence<_module.Term>.Create(terms.Count, i => terms[(int) i]);
-          return new _module.Prop_App(name, (Dafny.ISequence<_ITerm>) terms2);
-        } else {
-          var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
-          return new _module.Prop_App(name, terms);
-        }
+        var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
+        return new _module.Prop_App(name, terms);
       }
     }
 
