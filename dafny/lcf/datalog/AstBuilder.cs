@@ -98,8 +98,7 @@ namespace _module
       } else if (context.name.Text == "sub_string") {
         var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
         return new _module.Prop_BuiltinOp(new _module.Builtin_SubString(), terms);
-      }
-      else {
+      } else {
         var name = Sequence<char>.FromString(context.name.Text);
         if (context.term_list() == null ) {
           var terms = new List<_module.Term>();

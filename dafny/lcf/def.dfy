@@ -318,15 +318,20 @@ function unify_terms(s : seq<Term>, t : seq<Term>) : (res : Result<Subst>)
 
 function unify(r : Prop, g : Prop) : (res : Result<Subst>)
   requires g.concrete()
-  // ensures res.Ok? ==> r.complete_subst(res.val) && r.subst(res.val) == g
+  ensures res.Ok? ==> r.complete_subst(res.val) && r.subst(res.val) == g
 {
   match (r, g)
   case (App(f1, args1), App(f2, args2)) =>
     if f1 == f2 then unify_terms(args1, args2) else Err
   case (BuiltinOp(f1, args1), BuiltinOp(f2, args2)) =>
     if f1 == f2 then unify_terms(args1, args2) else Err
-  case (Eq(left1, right1), Eq(left2, right2)) =>
-    unify_terms([left1, right1], [left2, right2]) //TODO: verify
+  case (Eq(left1, right1), Eq(left2, right2)) => (
+    var x := unify_terms([left1], [left2]);
+    var y := unify_terms([right1], [right2]);
+    match (x, y)
+    case (Ok(xval), Ok(yval)) => merge_subst(xval, yval)
+    case _ => Err
+  )
   case _ => Err
 }
 
