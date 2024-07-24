@@ -33,9 +33,9 @@ prolog_trace_interception(Port, Frame, Choice, continue) :- % _Choice
         ->
             prolog_choice_attribute(Choice, frame, ChoiceFrame),
             prolog_frame_attribute(ChoiceFrame, goal, ChoiceGoal),
-            write(ChoiceGoal)
+            writeq(ChoiceGoal)
         ;
-            write(Goal)
+            writeq(Goal)
     ),
 
     writeln(";").

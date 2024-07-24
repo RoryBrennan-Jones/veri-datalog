@@ -72,7 +72,13 @@ namespace _module
     }
 
     public override object VisitClause(datalogParser.ClauseContext context) {
-      if (context.name.Text == "=" || context.name.Text == "=<" || context.name.Text == ">=" || context.name.Text == "\\=") {
+      if (context.name.Text == "="
+          || context.name.Text == "=<"
+          || context.name.Text == ">="
+          || context.name.Text == "\\="
+          || context.name.Text == "=="
+          || context.name.Text == "=\\="
+      ) {
         var left = (_module.Term)VisitTerm(context.left);
         var right = (_module.Term)VisitTerm(context.right);
         var terms = new List<_module.Term> { left, right };
@@ -84,10 +90,16 @@ namespace _module
             return new _module.Prop_BuiltinOp(new _module.Builtin_NatGeq(), terms2);
           case "\\=":
             return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
+          case "=\\=":
+            return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
           default:
             return new _module.Prop_Eq(left, right);
         }
-      } else {
+      } else if (context.name.Text == "sub_string") {
+        var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
+        return new _module.Prop_BuiltinOp(new _module.Builtin_SubString(), terms);
+      }
+      else {
         var name = Sequence<char>.FromString(context.name.Text);
         if (context.term_list() == null ) {
           var terms = new List<_module.Term>();
@@ -109,7 +121,8 @@ namespace _module
     }
 
     public override object VisitString(datalogParser.StringContext context) {
-      return new Term_Const(new Const_Str(Sequence<char>.FromString(context.s.Text)));
+      return new Term_Const(new Const_Str(Sequence<char>.FromString(context.s.Text.Substring(1, context.s.Text.Length - 2))));
+      // A substring of the text is taken in order to remove the quotes
     }
 
     public override object VisitVariable(datalogParser.VariableContext context) {

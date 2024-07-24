@@ -325,8 +325,8 @@ function unify(r : Prop, g : Prop) : (res : Result<Subst>)
     if f1 == f2 then unify_terms(args1, args2) else Err
   case (BuiltinOp(f1, args1), BuiltinOp(f2, args2)) =>
     if f1 == f2 then unify_terms(args1, args2) else Err
-  case (Eq(left1, right1), Eq(left2, right2)) => //WIP
-    unify_terms([left1, right1], [left2, right2])
+  case (Eq(left1, right1), Eq(left2, right2)) =>
+    unify_terms([left1, right1], [left2, right2]) //TODO: verify
   case _ => Err
 }
 
@@ -712,6 +712,20 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
         }
       }
       var r := rs[ri];
+
+      // // TODO: remove this commented code since it seems to be unnecessary
+      // if |trace'| == 0 {
+      //   var maybe_thm := mk_thm(rs, ri, map[], []);
+      //   match maybe_thm {
+      //     case Ok(thm) => {
+      //       return Ok((thm, trace'));
+      //     }
+      //     case Err => {
+      //       print "failed to deduce final theorem\n";
+      //       return Err;
+      //     }
+      //   }
+      // }
 
       var args: seq<Thm> := [];
       var assignment := map[];
@@ -1210,7 +1224,7 @@ method run(rs : RuleSet, trace : Trace) {
     print "The trace is not entirely concrete.\n";
     return;
   }
-  /* */
+  /* */ 
   var res := build_trace_tree2(trace, rs);
   if res.Err? {
     print "error\n";
