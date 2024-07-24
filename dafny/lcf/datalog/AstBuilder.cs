@@ -74,6 +74,8 @@ namespace _module
     public override object VisitBuiltin(datalogParser.BuiltinContext context) {
       var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
       switch (context.name.Text) {
+        case "split_string":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_SplitString(), terms);
         case "sub_string":
           return new _module.Prop_BuiltinOp(new _module.Builtin_SubString(), terms);
         case "length":
