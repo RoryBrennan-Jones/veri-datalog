@@ -713,20 +713,6 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
       }
       var r := rs[ri];
 
-      // // TODO: remove this commented code since it seems to be unnecessary
-      // if |trace'| == 0 {
-      //   var maybe_thm := mk_thm(rs, ri, map[], []);
-      //   match maybe_thm {
-      //     case Ok(thm) => {
-      //       return Ok((thm, trace'));
-      //     }
-      //     case Err => {
-      //       print "failed to deduce final theorem\n";
-      //       return Err;
-      //     }
-      //   }
-      // }
-
       var args: seq<Thm> := [];
       var assignment := map[];
       var maybe_assignment := unify(r.head, head.prop);
