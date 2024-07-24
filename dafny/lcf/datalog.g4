@@ -116,6 +116,7 @@ Port
 
 Builtin
   : 'sub_string'
+  | 'length'
   ;
 
 Identifier

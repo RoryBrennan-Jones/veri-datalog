@@ -72,12 +72,15 @@ namespace _module
     }
 
     public override object VisitBuiltin(datalogParser.BuiltinContext context) {
-      // if (context.name.Text == "sub_string") {
-        var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
-        return new _module.Prop_BuiltinOp(new _module.Builtin_SubString(), terms);
-      // } else {
-
-      // }
+      var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
+      switch (context.name.Text) {
+        case "sub_string":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_SubString(), terms);
+        case "length":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_Length(), terms);
+        default:
+          return null;
+      }
     }
 
     public override object VisitExpression(datalogParser.ExpressionContext context) {
