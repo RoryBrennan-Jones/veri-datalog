@@ -55,14 +55,15 @@ expression
   ;
 
 term
-  : const
+  : constant
   | variable
   ;
 
-const
+constant
   : atom
   | natural
   | string
+  | list
   ;
 
 clause_list
@@ -83,6 +84,14 @@ natural
 
 string
   : s=Str
+  ;
+
+list
+  : '[' constant_list ']'
+  ;
+
+constant_list
+  : constant ( ',' constant)*
   ;
 
 variable

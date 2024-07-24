@@ -124,6 +124,10 @@ namespace _module
       // A substring of the text is taken in order to remove the quotes.
     }
 
+    public override object VisitList(datalogParser.ListContext context) {
+      return new Term_Const(new Const_List( (Dafny.ISequence<_IConst>) VisitConstant_list(context.constant_list()) ));
+    }
+
     public override object VisitVariable(datalogParser.VariableContext context) {
       return new Term_Var(Sequence<char>.FromString(context.name.Text));
     }
@@ -144,6 +148,15 @@ namespace _module
         terms.Add(dafny_term);
       }
       return Sequence<_module.Term>.Create(terms.Count, i => terms[(int) i]);
+    }
+
+    public override object VisitConstant_list(datalogParser.Constant_listContext context) {
+      var consts = new List<_module.Const>();
+      foreach (var constant in context.constant()) {
+        var dafny_const = (_module.Const) ((_module.Term_Const) VisitConstant(constant))._val;
+        consts.Add(dafny_const);
+      }
+      return Sequence<_module.Const>.Create(consts.Count, i => consts[(int) i]);
     }
   }
 
