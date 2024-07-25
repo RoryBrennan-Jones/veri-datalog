@@ -118,14 +118,11 @@ Builtin
   : 'split_string'
   | 'sub_string'
   | 'string_lower' // TODO
-  | 'string_chars' // TODO
+  | 'string_chars'
   | 'length'
-  | 'lists:member'
-  | 'member'
-  | 'lists:reverse'
-  | 'reverse'
-  | 'lists:nth1'
-  | 'nth1'
+  | 'lists:member' | 'member'
+  | 'lists:reverse' | 'reverse'
+  | 'lists:nth1' | 'nth1'
   ;
 
 Identifier

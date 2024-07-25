@@ -60,12 +60,19 @@ function string_join(sep : string, parts : seq<string>) : string {
   else parts[0] + sep + string_join(sep, parts[1..])
 }
 
-datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | Length | Member | Reverse | Nth1 {
+function atom_strings(consts : seq<Const>) : Result<seq<string>> {
+  if forall i :: 0 <= i < |consts| ==> consts[i].Atom? then
+    Ok(seq(|consts|, i requires 0 <= i < |consts| => consts[i].val))
+  else Err
+}
+
+datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | StringChars | Length | Member | Reverse | Nth1 {
   predicate valid(args : seq<Const>) {
     match this {
       case NatLeq | NatGeq | NatNeq => |args| == 2 && args[0].Nat? && args[1].Nat?
       case SubString => |args| == 5 && args[0].Str? && args[1].Nat? && args[2].Nat? && args[3].Nat? && args[4].Str?
       case SplitString => |args| == 4 && args[0].Str? && args[1].Str? && args[2].Str? && args[3].List?
+      case StringChars => |args| == 2 && args[0].Str? && args[1].List?
       case Length => |args| == 2 && args[0].List? && args[1].Nat?
       case Member => |args| == 2 && args[1].List?
       case Reverse => |args| == 2 && args[0].List? && args[1].List?
@@ -89,6 +96,12 @@ datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | Length |
         var str, sep, pad, parts := args[0], args[1], args[2], args[3];
         match strings(parts.l) {
           case Ok(parts_strings) => str.s == string_join(sep.s, parts_strings)
+          case Err => false
+        }
+      )
+      case StringChars => (
+        match atom_strings(args[1].l) {
+          case Ok(parts_strings) => args[0].s == string_join("", parts_strings)
           case Err => false
         }
       )
