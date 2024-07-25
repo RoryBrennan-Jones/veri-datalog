@@ -84,6 +84,10 @@ namespace _module
            return new _module.Prop_BuiltinOp(new _module.Builtin_Member(), terms);
         case "member":
            return new _module.Prop_BuiltinOp(new _module.Builtin_Member(), terms);
+        case "lists:reverse":
+           return new _module.Prop_BuiltinOp(new _module.Builtin_Reverse(), terms);
+        case "reverse":
+           return new _module.Prop_BuiltinOp(new _module.Builtin_Reverse(), terms);
         default:
           return null;
       }

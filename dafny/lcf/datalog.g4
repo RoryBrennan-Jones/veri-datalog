@@ -122,8 +122,8 @@ Builtin
   | 'length'
   | 'lists:member'
   | 'member'
-  | 'lists:reverse' // TODO
-  | 'reverse' // TODO
+  | 'lists:reverse'
+  | 'reverse'
   ;
 
 Identifier
