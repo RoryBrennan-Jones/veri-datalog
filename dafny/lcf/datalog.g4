@@ -124,6 +124,8 @@ Builtin
   | 'member'
   | 'lists:reverse'
   | 'reverse'
+  | 'lists:nth1'
+  | 'nth1'
   ;
 
 Identifier

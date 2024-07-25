@@ -60,7 +60,7 @@ function string_join(sep : string, parts : seq<string>) : string {
   else parts[0] + sep + string_join(sep, parts[1..])
 }
 
-datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | Length | Member | Reverse {
+datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | Length | Member | Reverse | Nth1 {
   predicate valid(args : seq<Const>) {
     match this {
       case NatLeq | NatGeq | NatNeq => |args| == 2 && args[0].Nat? && args[1].Nat?
@@ -69,6 +69,7 @@ datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | Length |
       case Length => |args| == 2 && args[0].List? && args[1].Nat?
       case Member => |args| == 2 && args[1].List?
       case Reverse => |args| == 2 && args[0].List? && args[1].List?
+      case Nth1 => |args| == 3 && args[0].Nat? && args[1].List? && |args[1].l| > 0 && args[0].i > 0 && args[0].i <= |args[1].l|
     }
   }
 
@@ -104,6 +105,7 @@ datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | Length |
         |l.l| == |r.l| &&
         forall i :: 0 <= i < |l.l| ==> l.l[i] == r.l[|l.l|-1-i]
       )
+      case Nth1 => args[1].l[args[0].i-1] == args[2]
     }
   }
 }

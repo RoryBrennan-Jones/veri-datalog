@@ -88,6 +88,10 @@ namespace _module
            return new _module.Prop_BuiltinOp(new _module.Builtin_Reverse(), terms);
         case "reverse":
            return new _module.Prop_BuiltinOp(new _module.Builtin_Reverse(), terms);
+        case "lists:nth1":
+           return new _module.Prop_BuiltinOp(new _module.Builtin_Nth1(), terms);
+        case "nth1":
+           return new _module.Prop_BuiltinOp(new _module.Builtin_Nth1(), terms);
         default:
           return null;
       }
