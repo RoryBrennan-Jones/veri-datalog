@@ -66,11 +66,49 @@ function atom_strings(consts : seq<Const>) : Result<seq<string>> {
   else Err
 }
 
-datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | StringChars | Length | Member | Reverse | Nth1 {
+function lower_char(c : char) : char {
+  match (c)
+  case 'A' => 'a'
+  case 'B' => 'b'
+  case 'C' => 'c'
+  case 'D' => 'd'
+  case 'E' => 'e'
+  case 'F' => 'f'
+  case 'G' => 'g'
+  case 'H' => 'h'
+  case 'I' => 'i'
+  case 'J' => 'j'
+  case 'K' => 'k'
+  case 'L' => 'l'
+  case 'M' => 'm'
+  case 'N' => 'n'
+  case 'O' => 'o'
+  case 'P' => 'p'
+  case 'Q' => 'q'
+  case 'R' => 'r'
+  case 'S' => 's'
+  case 'T' => 't'
+  case 'U' => 'u'
+  case 'V' => 'v'
+  case 'W' => 'w'
+  case 'X' => 'x'
+  case 'Y' => 'y'
+  case 'Z' => 'z'
+  case _ => c
+}
+
+function lower_string(s : string) : string {
+  if |s| == 0 then s
+  else if |s| == 1 then [lower_char(s[0])]
+  else [lower_char(s[0])] + lower_string(s[1..])
+}
+
+datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | StringLower | SplitString | StringChars | Length | Member | Reverse | Nth1 {
   predicate valid(args : seq<Const>) {
     match this {
       case NatLeq | NatGeq | NatNeq => |args| == 2 && args[0].Nat? && args[1].Nat?
       case SubString => |args| == 5 && args[0].Str? && args[1].Nat? && args[2].Nat? && args[3].Nat? && args[4].Str?
+      case StringLower => |args| == 2 && args[0].Str? && args[1].Str?
       case SplitString => |args| == 4 && args[0].Str? && args[1].Str? && args[2].Str? && args[3].List?
       case StringChars => |args| == 2 && args[0].Str? && args[1].List?
       case Length => |args| == 2 && args[0].List? && args[1].Nat?
@@ -92,6 +130,7 @@ datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | SplitString | StringCh
         before.i+len.i+after.i == |str.s| &&
         str.s[before.i..before.i + len.i] == sub.s
       )
+      case StringLower => lower_string(args[0].s) == args[1].s
       case SplitString => (
         var str, sep, pad, parts := args[0], args[1], args[2], args[3];
         match strings(parts.l) {

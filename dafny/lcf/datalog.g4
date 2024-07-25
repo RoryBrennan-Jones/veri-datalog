@@ -117,7 +117,7 @@ Port
 Builtin
   : 'split_string'
   | 'sub_string'
-  | 'string_lower' // TODO
+  | 'string_lower'
   | 'string_chars'
   | 'length'
   | 'lists:member' | 'member'

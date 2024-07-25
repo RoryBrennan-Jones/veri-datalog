@@ -1,4 +1,4 @@
 string_eq(S) :-
-  S == "_1a ".
+  S == "hello world".
 
-go :- string_eq("_1a ").
+go :- string_eq("hello world").

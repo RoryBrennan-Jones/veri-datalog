@@ -78,6 +78,8 @@ namespace _module
           return new _module.Prop_BuiltinOp(new _module.Builtin_SplitString(), terms);
         case "sub_string":
           return new _module.Prop_BuiltinOp(new _module.Builtin_SubString(), terms);
+        case "string_lower":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_StringLower(), terms);
         case "string_chars":
           return new _module.Prop_BuiltinOp(new _module.Builtin_StringChars(), terms);
         case "length":
