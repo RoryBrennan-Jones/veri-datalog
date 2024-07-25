@@ -117,9 +117,13 @@ Port
 Builtin
   : 'split_string'
   | 'sub_string'
-  | 'string_lower'
-  | 'string_chars'
+  | 'string_lower' // TODO
+  | 'string_chars' // TODO
   | 'length'
+  | 'lists:member'
+  | 'member'
+  | 'lists:reverse' // TODO
+  | 'reverse' // TODO
   ;
 
 Identifier

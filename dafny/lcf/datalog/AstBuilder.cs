@@ -80,6 +80,10 @@ namespace _module
           return new _module.Prop_BuiltinOp(new _module.Builtin_SubString(), terms);
         case "length":
           return new _module.Prop_BuiltinOp(new _module.Builtin_Length(), terms);
+        case "lists:member":
+           return new _module.Prop_BuiltinOp(new _module.Builtin_Member(), terms);
+        case "member":
+           return new _module.Prop_BuiltinOp(new _module.Builtin_Member(), terms);
         default:
           return null;
       }
