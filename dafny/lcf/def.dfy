@@ -683,6 +683,10 @@ method build_trace_tree2(trace: Trace, rs: RuleSet) returns (res : Result<(Outco
           invariant |trace'| < |trace|
           decreases |trace'|
         {
+          if trace'[|trace'|-1].level != head.level + 1 {
+            trace' := trace'[..|trace'|-1];
+            continue;
+          }
           var new_subst := map[];
           var maybe_new_subst := unify(r.body[i], trace'[|trace'|-1].prop);
           match maybe_new_subst {
@@ -795,6 +799,10 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
           invariant |trace'| < |trace|
           decreases |trace'|
         {
+          if trace'[|trace'|-1].level != head.level + 1 {
+            trace' := trace'[..|trace'|-1];
+            continue;
+          }
           var new_subst := map[];
           var maybe_new_subst := unify(r.body[i], trace'[|trace'|-1].prop);
           match maybe_new_subst {
