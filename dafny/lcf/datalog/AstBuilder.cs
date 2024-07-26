@@ -24,8 +24,7 @@ namespace _module
       var level = (BigInteger) VisitInteger(context.level);
       var goal = (_IProp) VisitClause(context.goal);
       var id = (BigInteger) VisitInteger(context.id);
-      var choice = (_IProp) VisitClause(context.choice);
-      return new _module.Event(port, level, goal, id, choice);
+      return new _module.Event(port, level, goal, id);
     }
 
     public override object VisitPort(datalogParser.PortContext context) => context.name.Text switch {

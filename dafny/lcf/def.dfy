@@ -355,7 +355,7 @@ function tst_reverse_thm() : Result<Thm> {
 
 datatype Port = Call | Unify | Redo | Exit | Fail
 
-datatype Event = Event(port : Port, level : nat, prop : Prop, i : nat, choice: Prop)
+datatype Event = Event(port : Port, level : nat, prop : Prop, i : nat)
 
 type Trace = seq<Event>
 
@@ -425,7 +425,7 @@ datatype Outcome = Success(nodes : seq<TraceNode>) | Failure {
   }
 }
 
-// Process a sequence of trace events into a trace tree of the successful search path.
+/* // Process a sequence of trace events into a trace tree of the successful search path.
 method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (res : Result<(Outcome, Trace)>)
   ensures res.Ok? ==> res.val.0.wf() && |res.val.1| <= |trace|
   decreases bound
@@ -627,7 +627,7 @@ method build_trace_tree(trace : Trace, min_level : nat, bound : nat) returns (re
     }
   }
   return Ok((Success(nodes), trace));
-}
+}*/
 
 // note: here, outcome is used to store only one node
 method build_trace_tree2(trace: Trace, rs: RuleSet) returns (res : Result<(Outcome, Trace)>)

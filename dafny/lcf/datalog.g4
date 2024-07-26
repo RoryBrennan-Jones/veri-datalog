@@ -9,7 +9,7 @@ trace
   ;
 
 traceevent
-  : port level=integer id=integer goal=clause choice=clause';'
+  : port level=integer id=integer goal=clause';'
   ;
 
 port
