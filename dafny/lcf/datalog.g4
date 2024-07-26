@@ -102,7 +102,11 @@ variable
  * Lexer Rules
  */
 
-fragment CHARACTER: ALPHANUMERIC | '.' |' '|'\t'|'\n'|'\r'|'\r\n'; // TODO: expand to all ASCII characters
+fragment CHARACTER
+  : ALPHANUMERIC // TODO: expand to all ASCII characters
+  | '.' | ','
+  | ' ' | '\t' | '\n' | '\r' | '\r\n'
+  ;
 fragment ALPHANUMERIC: ALPHA | DIGIT ;
 fragment ALPHA: '_' | SMALL_LETTER | CAPITAL_LETTER ;
 fragment LEADER: '_' | CAPITAL_LETTER;
@@ -130,7 +134,7 @@ Identifier
 	;
 
 Operator
-  : '=' | '=<' | '>=' | '\\=' | '==' | '=\\='
+  : '=' | '=<' | '>=' | '\\=' | '=\\=' | '<' | '>' | '=='
   ;
 
 VarName

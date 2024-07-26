@@ -115,6 +115,10 @@ namespace _module
           return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
         case "=\\=":
           return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
+        case "<":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_NatLt(), terms2);
+        case ">":
+          return new _module.Prop_BuiltinOp(new _module.Builtin_NatGt(), terms2);
         default:
           return new _module.Prop_Eq(left, right);
       }

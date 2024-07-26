@@ -103,10 +103,10 @@ function lower_string(s : string) : string {
   else [lower_char(s[0])] + lower_string(s[1..])
 }
 
-datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | StringLower | SplitString | StringChars | Length | Member | Reverse | Nth1 {
+datatype Builtin = NatLeq | NatGeq | NatNeq | NatLt | NatGt | SubString | StringLower | SplitString | StringChars | Length | Member | Reverse | Nth1 {
   predicate valid(args : seq<Const>) {
     match this {
-      case NatLeq | NatGeq | NatNeq => |args| == 2 && args[0].Nat? && args[1].Nat?
+      case NatLeq | NatGeq | NatNeq | NatLt | NatGt => |args| == 2 && args[0].Nat? && args[1].Nat?
       case SubString => |args| == 5 && args[0].Str? && args[1].Nat? && args[2].Nat? && args[3].Nat? && args[4].Str?
       case StringLower => |args| == 2 && args[0].Str? && args[1].Str?
       case SplitString => |args| == 4 && args[0].Str? && args[1].Str? && args[2].Str? && args[3].List?
@@ -125,6 +125,8 @@ datatype Builtin = NatLeq | NatGeq | NatNeq | SubString | StringLower | SplitStr
       case NatGeq => args[0].i >= args[1].i
       case NatLeq => args[0].i <= args[1].i
       case NatNeq => args[0].i != args[1].i
+      case NatLt => args[0].i < args[1].i
+      case NatGt => args[0].i > args[1].i
       case SubString => (
         var str, before, len, after, sub := args[0], args[1], args[2], args[3], args[4];
         before.i+len.i+after.i == |str.s| &&
