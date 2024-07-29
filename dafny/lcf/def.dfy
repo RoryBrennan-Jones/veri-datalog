@@ -136,7 +136,7 @@ datatype Builtin = NatLeq | NatGeq | NatNeq | NatLt | NatGt | SubString | String
       case SplitString => (
         var str, sep, pad, parts := args[0], args[1], args[2], args[3];
         match strings(parts.l) {
-          case Ok(parts_strings) => str.s == string_join(sep.s, parts_strings)
+          case Ok(parts_strings) => str.s == string_join(sep.s, parts_strings) // TODO: add support for padding
           case Err => false
         }
       )
