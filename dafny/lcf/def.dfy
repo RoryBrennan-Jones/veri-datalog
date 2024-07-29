@@ -391,37 +391,6 @@ function unify(r : Prop, g : Prop) : (res : Result<Subst>)
   case _ => Err
 }
 
-//// Trace tree construction.
-
-datatype TraceNode = TraceNode(i : nat, prop : Prop, children : seq<TraceNode>) {
-  predicate wf() {
-    prop.concrete()
-    && forall j :: 0 <= j < |children| ==> children[j].wf()
-  }
-
-  method dump() {
-    dump_indent("");
-  }
-
-  method dump_indent(indent : string) {
-    print indent, "rule=", i, " prop=", prop, "\n";
-    var i := 0;
-    while i < |children| {
-      children[i].dump_indent(indent+"  ");
-      i := i + 1;
-    }
-  }
-}
-
-datatype Outcome = Success(nodes : seq<TraceNode>) | Failure {
-  predicate wf() {
-    match this {
-      case Success(nodes) => forall i :: 0 <= i < |nodes| ==> nodes[i].wf()
-      case Failure => true
-    }
-  }
-}
-
 method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, Trace)>)
   requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
   requires |trace| > 0
