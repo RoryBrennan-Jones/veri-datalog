@@ -305,19 +305,19 @@ function tst_sub_string_thm() : Result<Thm> {
   var s : Subst := map["x" := Str("world")];
   Ok(mk_thm(tst_sub_string(), 0, s, [lf]).val)
 }
-/*
+
 function tst_split_string() : RuleSet {
-  [Rule(App("foo", [Var("x")]), [BuiltinOp(SplitString, [Const(Str("a.b")), Const(Str(".")), Var("x")])], 0)]
+  [Rule(App("foo", [Var("x")]), [BuiltinOp(SplitString, [Const(Str("a.b")), Const(Str(".")), Const(Str("")), Var("x")])], 0)]
 }
 
 function tst_string_split_thm() : Result<Thm> {
-  var prop := BuiltinOp(SplitString, [Const(Str("a.b")), Const(Str(".")), Const( List( [Str("a"), Str("b")]))]);
+  var prop := BuiltinOp(SplitString, [Const(Str("a.b")), Const(Str(".")), Const(Str("")), Const( List( [Str("a"), Str("b")]))]);
   assert prop.valid();
   var lf := mk_leaf(prop).val;
   var s : Subst := map["x" :=  List([Str("a"), Str("b")])];
   Ok(mk_thm(tst_split_string(), 0, s, [lf]).val)
 }
-*/
+
 function tst_length() : RuleSet {
   [Rule(App("foo", [Var("x")]), [BuiltinOp(Length, [Const(List([Nat(1), Nat(2), Nat(3)])), Var("x")])], 0)]
 }
