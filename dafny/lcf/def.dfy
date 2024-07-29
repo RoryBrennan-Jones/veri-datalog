@@ -785,8 +785,7 @@ method run(rs : RuleSet, trace : Trace) {
   }
   print "\n";
 
-  // Build tree.
-  // var res := build_trace_tree(trace, 0, 0x1000_0000_0000);
+  // Deduce theorem.
   if |trace| == 0 {
     print "There is no trace because it did not succeed.\n";
     return;
@@ -795,40 +794,6 @@ method run(rs : RuleSet, trace : Trace) {
     print "The trace is not entirely concrete.\n";
     return;
   }
-  /* */ 
-  var res := build_trace_tree2(trace, rs);
-  if res.Err? {
-    print "error\n";
-    return;
-  }
-  var outcome := res.val.0;
-  if outcome.Failure? {
-    print "failure\n";
-    return;
-  }
-  if |outcome.nodes| == 0 {
-    print "no nodes";
-    return;
-  }
-
-  print "tree:\n";
-  i := 0;
-  while i < |outcome.nodes| {
-    outcome.nodes[i].dump();
-    i := i+1;
-  }
-  print "\n";
-
-  // Deduce theorem.
-  var root := outcome.nodes[0];
-  // var maybe_match := reconstruct(root, root.prop, rs);
-  // if maybe_match.Err? {
-  //   print "reconstruction error\n";
-  //   return;
-  // }
-  // print "thm: ", maybe_match.val.thm, "\n";
-  // print "OK\n";
-  /* */
   var maybe_match := build_proof_tree(trace, rs);
   if maybe_match.Err? {
     print "reconstruction error\n";
