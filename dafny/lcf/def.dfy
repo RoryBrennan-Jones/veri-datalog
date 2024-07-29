@@ -391,9 +391,6 @@ function unify(r : Prop, g : Prop) : (res : Result<Subst>)
   case _ => Err
 }
 
-datatype Match = Match(s : Subst, thm : Thm)
-
-
 //// Trace tree construction.
 
 datatype TraceNode = TraceNode(i : nat, prop : Prop, children : seq<TraceNode>) {
