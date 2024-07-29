@@ -702,7 +702,7 @@ function connectivity_rules() : RuleSet {
     /*7*/mk_fact("destination", ["n3"], 7)
   ]
 }
-/*
+
 function connectivity_trace() : (trace : Trace)
   ensures |trace| > 0
 {
@@ -764,7 +764,7 @@ method run_connectivity_example() {
   var rs := connectivity_rules();
   var trace := connectivity_trace();
   run(rs, trace);
-}*/
+}
 
 method run(rs : RuleSet, trace : Trace) {
   // Dump rules.
