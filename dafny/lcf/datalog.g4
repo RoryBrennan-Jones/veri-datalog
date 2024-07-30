@@ -79,7 +79,7 @@ atom
   ;
 
 natural
-  : numeral=Int // telling it to use Nat doesn't work
+  : numeral=Int // TODO: make natural use the Nat rule, or switch support from natural numbers to integers
   ;
 
 string
@@ -103,7 +103,7 @@ variable
  */
 
 fragment CHARACTER
-  : ALPHANUMERIC // TODO: expand to all ASCII characters
+  : ALPHANUMERIC // TODO: expand to all characters that are permitted by Prolog strings, including escaped characters such as double quotes
   | '.' | ','
   | ' ' | '\t' | '\n' | '\r' | '\r\n'
   ;
@@ -161,6 +161,6 @@ fragment Digit
 	: [0-9]
 	;
 
-WS // TODO: if this is causing whitespace in strings to be skipped, fix that (it causes parsing issues)
+WS
 	: (' '|'\t'|'\n'|'\r'|'\r\n')+ -> skip
 	;
