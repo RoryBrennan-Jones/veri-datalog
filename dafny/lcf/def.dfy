@@ -401,6 +401,10 @@ method print_event(e: Event) {
   print "\n";
 }
 
+/*
+ * This method takes the trace output of a program and that program's rules, and then returns
+ * a proof of the correctness of that program.
+ */
 method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, Trace)>)
   requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
   requires |trace| > 0
@@ -409,6 +413,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   ensures res.Ok? ==> res.val.0.wf(rs)
   decreases |trace|
 {
+  // Here, the last element of the trace is popped and stored in head.
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
@@ -418,7 +423,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
       var maybe_leaf := mk_leaf(Eq(l, r));
       match maybe_leaf {
         case Ok(thm) => {
-          print_event(head);
+          print_event(head); // for debugging
           return Ok((thm, trace'));
         }
         case Err => {
@@ -431,7 +436,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
       var maybe_leaf := mk_leaf(BuiltinOp(b, args));
       match maybe_leaf {
         case Ok(thm) => {
-          print_event(head);
+          print_event(head); // for debugging
           return Ok((thm, trace'));
         }
         case Err => {
@@ -440,7 +445,8 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
         }
       }
     }
-    case App(_, _) => {
+    case App(_, _) => { // This triggers if head's prop is a fact or a non-builtin predicate.
+      // The rule used by the prop is stored.
       var ri: nat;
       var maybe_ri := lookup_rule(rs, head.i);
       match maybe_ri {
@@ -452,8 +458,9 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
       }
       var r := rs[ri];
 
-      var args: seq<Thm> := [];
-      var assignment := map[];
+      var args: seq<Thm> := []; // `args` holds the child theorems of this part of the proof tree.
+      var assignment := map[]; // `assignment` is the substitution used for holding the variable assignment at this part of the proof tree.
+      // Here, the variable information that can be determined directly from the prop is stored in `assignment`.
       var maybe_assignment := unify(r.head, head.prop);
       match maybe_assignment {
         case Ok(substitution) => assignment := substitution;
@@ -463,11 +470,13 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
         }
       }
 
+      // The program loops through the rule's children in the search for trace events that match with them.
       for i := |r.body| downto 0
         invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
         invariant |trace'| < |trace|
         invariant forall j :: 0 <= j < |args| ==> args[j].wf(rs)
       {
+        // This while loop skips over all ineligble trace events until it finds one that matches with the next child rule.
         while |trace'| > 0
           invariant forall j :: 0 <= j < |trace'| ==> trace'[j].prop.concrete()
           invariant |trace'| < |trace|
@@ -501,19 +510,21 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
           return Err;
         }
 
+        // The succesfully matched trace event is used to create a sub proof tree.
         var res := build_proof_tree(trace', rs);
         if res.Err? {
           print "error\n";
           return Err;
         }
-        trace' := res.val.1;
-        args := [res.val.0] + args;
+        trace' := res.val.1; // The trace is updated to reflect the popping of elements inside the recursion.
+        args := [res.val.0] + args; // The sub proof tree is stored in this list.
       }
 
+      // The proof trees from the children are used to make the proof for this part of the tree.
       var maybe_thm := mk_thm(rs, ri, assignment, args);
       match maybe_thm {
         case Ok(thm) => {
-          print_event(head);
+          print_event(head); // for debugging
           return Ok((thm, trace'));
         }
         case Err => {
