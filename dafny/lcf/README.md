@@ -17,4 +17,4 @@ Since exit ports always follow successes, the first exit ports in the trace happ
 
 ### Types and Builtins
 
-Unlike Datalog, Datalog+ supports constants other than atoms, including numbers, strings, and lists. There is also support for certain builtin operations, such as equality operators and string and list builtins.
+Unlike Datalog, Datalog+ supports constants other than atoms, including numbers, strings, and lists. These types are not complete yet. It has not been decided yet if the numbers should be natural numbers or integers (or if both should be supported). Furthermore, strings do not support all characters that could be found in a legal Datalog+ string, including escaped characters such as double quotes. Also, lists currently only support constant terms and cannot use the pipe operator. In addition to these types, there is also support for certain builtin operations, such as equality operators and string and list builtins.
