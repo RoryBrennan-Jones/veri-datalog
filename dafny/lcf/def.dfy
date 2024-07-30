@@ -391,6 +391,16 @@ function unify(r : Prop, g : Prop) : (res : Result<Subst>)
   case _ => Err
 }
 
+method print_event(e: Event) {
+  var j := e.level;
+  while j > 11 {
+    print "  ";
+    j := j - 1;
+  }
+  print e.prop;
+  print "\n";
+}
+
 method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, Trace)>)
   requires forall j :: 0 <= j < |trace| ==> trace[j].prop.concrete()
   requires |trace| > 0
@@ -402,11 +412,13 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
   var trace' := trace;
   var head := trace'[|trace'|-1];
   trace' := trace'[..|trace'|-1];
+
   match head.prop {
     case Eq(l, r) => {
       var maybe_leaf := mk_leaf(Eq(l, r));
       match maybe_leaf {
         case Ok(thm) => {
+          print_event(head);
           return Ok((thm, trace'));
         }
         case Err => {
@@ -419,6 +431,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
       var maybe_leaf := mk_leaf(BuiltinOp(b, args));
       match maybe_leaf {
         case Ok(thm) => {
+          print_event(head);
           return Ok((thm, trace'));
         }
         case Err => {
@@ -500,6 +513,7 @@ method build_proof_tree(trace: Trace, rs: RuleSet) returns (res : Result<(Thm, T
       var maybe_thm := mk_thm(rs, ri, assignment, args);
       match maybe_thm {
         case Ok(thm) => {
+          print_event(head);
           return Ok((thm, trace'));
         }
         case Err => {
@@ -660,6 +674,7 @@ method run(rs : RuleSet, trace : Trace) {
     return;
   }
   var maybe_match := build_proof_tree(trace, rs);
+  print "\n"; // if there was a flag that disabled printing in build_proof_tree, this line should be disabled as well
   if maybe_match.Err? {
     print "reconstruction error\n";
     return;
