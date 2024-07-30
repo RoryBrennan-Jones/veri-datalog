@@ -145,7 +145,7 @@ namespace _module
 
     public override object VisitString(datalogParser.StringContext context) {
       return new Term_Const(new Const_Str(Sequence<char>.FromString(context.s.Text.Substring(1, context.s.Text.Length - 2))));
-      // A substring of the text is taken in order to remove the quotes.
+      // A substring of the text is taken in order to remove the double quotes.
     }
 
     public override object VisitList(datalogParser.ListContext context) {
