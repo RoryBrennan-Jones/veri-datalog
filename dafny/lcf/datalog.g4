@@ -103,9 +103,11 @@ variable
  */
 
 fragment CHARACTER
-  : ALPHANUMERIC // TODO: expand to all characters that are permitted by Prolog strings, including escaped characters such as double quotes
-  | '.' | ','
-  | ' ' | '\t' | '\n' | '\r' | '\r\n'
+  : ALPHANUMERIC // TODO: expand to all characters that are permitted by Prolog strings
+  | '.' | ',' | ' '
+  | '\t' | '\\t'
+  | '\n' | '\\n'
+  | '\r' | '\\r'
   | '"' | '\\"'
   | '\\'
   ;
