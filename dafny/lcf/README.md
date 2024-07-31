@@ -1,6 +1,6 @@
 ## Project Overview
 
-The Veri-Datalog project is a verified checker for the correctness of Datalog+ programs. Datalog+ is a research defined language that is similar to Datalog but with more feature support; both are subsets of Prolog.
+The Veri-Datalog project is a verified Datalog+ engine. Datalog+ is a research defined language that is similar to Datalog but with more feature support; both are subsets of Prolog.
 
 ## Contributions by Rory Brennan-Jones
 
