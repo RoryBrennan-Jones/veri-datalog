@@ -104,7 +104,7 @@ variable
 
 fragment CHARACTER
   : ALPHANUMERIC // TODO: expand to all characters that are permitted by Prolog strings
-  | '.' | ',' | ' '
+  | '.' | ',' | ';' | '!' | '?' | ' '
   | '\t' | '\\t'
   | '\n' | '\\n'
   | '\r' | '\\r'
