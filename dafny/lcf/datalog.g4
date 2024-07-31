@@ -106,6 +106,7 @@ fragment CHARACTER
   : ALPHANUMERIC // TODO: expand to all characters that are permitted by Prolog strings, including escaped characters such as double quotes
   | '.' | ','
   | ' ' | '\t' | '\n' | '\r' | '\r\n'
+  | '\\'
   ;
 fragment ALPHANUMERIC: ALPHA | DIGIT ;
 fragment ALPHA: '_' | SMALL_LETTER | CAPITAL_LETTER ;
