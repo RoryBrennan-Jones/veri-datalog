@@ -684,6 +684,7 @@ method run(rs : RuleSet, trace : Trace) {
     print "The trace is not entirely concrete.\n";
     return;
   }
+  print "tree:\n"; // if there was a flag that disabled printing in build_proof_tree, this line should be disabled as well
   var maybe_match := build_proof_tree(trace, rs);
   print "\n"; // if there was a flag that disabled printing in build_proof_tree, this line should be disabled as well
   if maybe_match.Err? {
