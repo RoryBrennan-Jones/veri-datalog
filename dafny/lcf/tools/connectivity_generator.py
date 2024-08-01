@@ -101,4 +101,8 @@ def write_datalog(p, out):
 
     print('go :- source(S), destination(D), connected(S,D).')
 
-write_datalog(random_connectivity_problem(100), sys.stdout)
+def main():
+    write_datalog(random_connectivity_problem(100), sys.stdout)
+
+if __name__ == "__main__":
+    main()
