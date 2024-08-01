@@ -108,7 +108,7 @@ fragment CHARACTER
   | '\t' | '\\t'
   | '\n' | '\\n'
   | '\r' | '\\r'
-  | '"' | '\\"'
+  // | '"' | '\\"' // TODO: fix parsing issue with escaped double quotes and restore support
   | '\\'
   ;
 fragment ALPHANUMERIC: ALPHA | DIGIT ;
