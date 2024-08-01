@@ -145,11 +145,11 @@ namespace _module
 
     public override object VisitString(datalogParser.StringContext context) {
       var s = context.s.Text.Substring(1, context.s.Text.Length - 2);
-      s.Replace("\\t", "\t");
-      s.Replace("\\n", "\n");
-      s.Replace("\\r", "\r");
-      s.Replace("\\\"", "\"");
-      s.Replace("\\\\", "\\");
+      s = s.Replace("\\t", "\t");
+      s = s.Replace("\\n", "\n");
+      s = s.Replace("\\r", "\r");
+      s = s.Replace("\\\"", "\"");
+      s = s.Replace("\\\\", "\\");
       return new Term_Const(new Const_Str(Sequence<char>.FromString(s)));
       // A substring of the text is taken in order to remove the double quotes.
     }
