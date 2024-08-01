@@ -84,6 +84,7 @@ datatype Builtin = NatLeq | NatGeq | NatNeq | NatLt | NatGt | SubString | String
       case SubString => |args| == 5 && args[0].Str? && args[1].Nat? && args[2].Nat? && args[3].Nat? && args[4].Str?
       case StringLower => |args| == 2 && args[0].Str? && args[1].Str?
       case SplitString => |args| == 4 && args[0].Str? && args[1].Str? && args[2].Str? && args[3].List?
+        && args[2].s == "" // TODO: add support for padding (this line rejects any predicates that attempt to use the padding feature)
       case StringChars => |args| == 2 && args[0].Str? && args[1].List?
       case Length => |args| == 2 && args[0].List? && args[1].Nat?
       case Member => |args| == 2 && args[1].List?
