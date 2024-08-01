@@ -91,7 +91,7 @@ def write_connectivity_problem_facts(p, out=sys.stdout):
     print(f'destination("{p.dst}").', file=out)
 
 
-def _write_datalog(p, out): # cls
+def write_datalog(p, out):
     # Facts.
     write_connectivity_problem_facts(p, out=out)
 
@@ -101,7 +101,4 @@ def _write_datalog(p, out): # cls
 
     print('go :- source(S), destination(D), connected(S,D).')
 
-    # Query.
-    # print(f'{cls.QUERY_NAME}(S, D) :- source(S), destination(D), connected(S, D).', file=out)
-
-_write_datalog(random_connectivity_problem(100), sys.stdout)
+write_datalog(random_connectivity_problem(100), sys.stdout)
