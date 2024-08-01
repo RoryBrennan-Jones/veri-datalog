@@ -96,7 +96,7 @@ namespace _module
         case "nth1":
            return new _module.Prop_BuiltinOp(new _module.Builtin_Nth1(), terms);
         default:
-          return null;
+          throw new Exception("Invalid builtin name");
       }
     }
 
@@ -111,15 +111,17 @@ namespace _module
         case ">=":
           return new _module.Prop_BuiltinOp(new _module.Builtin_NatGeq(), terms2);
         case "\\=":
-          return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
         case "=\\=":
           return new _module.Prop_BuiltinOp(new _module.Builtin_NatNeq(), terms2);
         case "<":
           return new _module.Prop_BuiltinOp(new _module.Builtin_NatLt(), terms2);
         case ">":
           return new _module.Prop_BuiltinOp(new _module.Builtin_NatGt(), terms2);
-        default:
+        case "=":
+        case "==":
           return new _module.Prop_Eq(left, right);
+        default:
+          throw new Exception("Invalid builtin name");
       }
     }
 
