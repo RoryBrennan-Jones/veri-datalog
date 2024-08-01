@@ -48,3 +48,9 @@ double quotes. Also, lists currently only support constant terms and cannot use
 the pipe operator. In addition to these types, there is also support for
 certain builtin operations, such as equality operators and string and list
 builtins.
+
+### Noteable Test Cases
+
+* `connectivity2.pl` -- Causes a choicepoint that SWIPL fails and redoes
+* `connectivity4.pl` -- Causes a call, a fail, a redo, and an exit to happen consecutively at the same level
+* `node1.pl` -- Requires build_proof_tree to pay attention to level
