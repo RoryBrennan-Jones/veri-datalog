@@ -70,34 +70,38 @@ namespace _module
       return context.Start.Line;
     }
 
-    public override object VisitBuiltin(datalogParser.BuiltinContext context) {
-      var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
-      switch (context.name.Text) {
+    private static dynamic GetBuiltinFromString(string s) {
+      switch (s) {
         case "split_string":
-          return new _module.Prop_BuiltinOp(new _module.Builtin_SplitString(), terms);
+          return new _module.Builtin_SplitString();
         case "sub_string":
-          return new _module.Prop_BuiltinOp(new _module.Builtin_SubString(), terms);
+          return new _module.Builtin_SubString();
         case "string_lower":
-          return new _module.Prop_BuiltinOp(new _module.Builtin_StringLower(), terms);
+          return new _module.Builtin_StringLower();
         case "string_chars":
-          return new _module.Prop_BuiltinOp(new _module.Builtin_StringChars(), terms);
+          return new _module.Builtin_StringChars();
         case "length":
-          return new _module.Prop_BuiltinOp(new _module.Builtin_Length(), terms);
+          return new _module.Builtin_Length();
         case "lists:member":
-           return new _module.Prop_BuiltinOp(new _module.Builtin_Member(), terms);
+           return new _module.Builtin_Member();
         case "member":
-           return new _module.Prop_BuiltinOp(new _module.Builtin_Member(), terms);
+           return new _module.Builtin_Member();
         case "lists:reverse":
-           return new _module.Prop_BuiltinOp(new _module.Builtin_Reverse(), terms);
+           return new _module.Builtin_Reverse();
         case "reverse":
-           return new _module.Prop_BuiltinOp(new _module.Builtin_Reverse(), terms);
+           return new _module.Builtin_Reverse();
         case "lists:nth1":
-           return new _module.Prop_BuiltinOp(new _module.Builtin_Nth1(), terms);
+           return new _module.Builtin_Nth1();
         case "nth1":
-           return new _module.Prop_BuiltinOp(new _module.Builtin_Nth1(), terms);
+           return new _module.Builtin_Nth1();
         default:
           throw new Exception("Invalid builtin name");
       }
+    }
+
+    public override object VisitBuiltin(datalogParser.BuiltinContext context) {
+      var terms = (Dafny.ISequence<_ITerm>) VisitTerm_list(context.term_list());
+      return new _module.Prop_BuiltinOp(GetBuiltinFromString(context.name.Text), terms);
     }
 
     public override object VisitExpression(datalogParser.ExpressionContext context) {
