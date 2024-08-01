@@ -83,15 +83,12 @@ namespace _module
         case "length":
           return new _module.Builtin_Length();
         case "lists:member":
-           return new _module.Builtin_Member();
         case "member":
            return new _module.Builtin_Member();
         case "lists:reverse":
-           return new _module.Builtin_Reverse();
         case "reverse":
            return new _module.Builtin_Reverse();
         case "lists:nth1":
-           return new _module.Builtin_Nth1();
         case "nth1":
            return new _module.Builtin_Nth1();
         default:
