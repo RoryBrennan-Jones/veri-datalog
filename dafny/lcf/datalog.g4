@@ -17,7 +17,7 @@ port
   ;
 
 integer
-  : numeral=Int
+  : numeral=Nat
   ;
 
 /*
@@ -79,7 +79,7 @@ atom
   ;
 
 natural
-  : numeral=Int // TODO: make natural use the Nat rule, or switch support from natural numbers to integers
+  : numeral=Nat // TODO: make natural use the Nat rule, or switch support from natural numbers to integers
   ;
 
 string
@@ -145,9 +145,9 @@ VarName
   : LEADER (Nondigit | Digit)*
   ;
 
-Int
-	: ('-')? Digit+
-	;
+// Int
+// 	: ('-')? Digit+
+// 	;
 
 Nat
   : Digit+
