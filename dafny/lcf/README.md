@@ -49,6 +49,12 @@ the pipe operator. In addition to these types, there is also support for
 certain builtin operations, such as equality operators and string and list
 builtins.
 
+### Supported Primitives
+
+* Numbers
+* Strings
+* Lists
+
 ### Noteable Test Cases
 
 * `connectivity2.pl` -- Causes a choicepoint that SWIPL fails and redoes
