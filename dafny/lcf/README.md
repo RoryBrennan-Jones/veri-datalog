@@ -50,7 +50,7 @@ certain builtin operations, such as equality operators and string and list
 builtins.
 
 **Supported primitives**
-* Numbers
+* Natural numbers
 * Strings
 * Lists
 
