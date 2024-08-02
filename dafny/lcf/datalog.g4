@@ -79,7 +79,7 @@ atom
   ;
 
 natural
-  : numeral=Nat // TODO: make natural use the Nat rule, or switch support from natural numbers to integers
+  : numeral=Nat
   ;
 
 string
