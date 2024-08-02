@@ -37,7 +37,7 @@ fact, equality, or builtin becomes a leaf in the proof tree, whereas other
 trace events become regular theorems that have proofs using other theorems and
 leaves from lower down in the tree as arguments.
 
-### Types and Builtins
+### Primitives and Builtins
 
 Unlike Datalog, Datalog+ supports constants other than atoms, including
 numbers, strings, and lists. These types are not complete yet. It has not been
@@ -49,11 +49,32 @@ the pipe operator. In addition to these types, there is also support for
 certain builtin operations, such as equality operators and string and list
 builtins.
 
-### Supported Primitives
-
+**Supported primitives**
 * Numbers
 * Strings
 * Lists
+
+**Supported infix operators**
+* `>`
+* `<`
+* `=<`
+* `>=`
+* `\=`
+* `=\=`
+* `=`
+* `==`
+
+**Supported string builtin operators**
+* `split_string`
+* `sub_string`
+* `string_lower`
+* `string_chars`
+
+**Supported list builtin operators**
+* `length`
+* `member`
+* `reverse`
+* `nth1`
 
 ### Noteable Test Cases
 
